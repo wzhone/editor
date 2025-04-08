@@ -13,9 +13,7 @@ export interface CanvasItem {
   boxName: string; // 盒子名称
   locId?: string; // 位置ID
   showType?: "rectangle" | "ellipse"; // 图形类型
-  showName?: string; // 显示名称（可选）
-  rotation?: number; // 旋转角度（可选，弧度）
-  zIndex?: number; // 层叠顺序（可选）
+  // showName?: string; // 显示名称（可选）
 }
 
 /**

@@ -265,8 +265,8 @@ export function useRender({
       drawGrid(offCtx);
     }
 
-    // 获取并按Z轴排序的可见元素
-    const sortedItems = CanvasUtils.sortItemsByZIndex(visibleItems);
+    // 逆序绘制，以配合点击查找逻辑
+    const sortedItems = [...visibleItems].reverse();
 
     // 绘制可见元素
     for (const item of sortedItems) {

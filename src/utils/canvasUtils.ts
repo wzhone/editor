@@ -74,17 +74,6 @@ export function isPointInItem(point: Point, item: CanvasItem): boolean {
 }
 
 /**
- * 按Z轴索引排序项目
- */
-export function sortItemsByZIndex(items: CanvasItem[]): CanvasItem[] {
-  return [...items].sort((a, b) => {
-    const zIndexA = a.zIndex || 0;
-    const zIndexB = b.zIndex || 0;
-    return zIndexA - zIndexB;
-  });
-}
-
-/**
  * 计算是否在视口内
  * 用于裁剪视口外的项目，提高渲染性能
  */
