@@ -1,4 +1,4 @@
-// src/hooks/useCanvas.ts
+// src/hooks/useCanvas.ts 修改版本
 import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { useCanvasStore } from '@/state/store';
 import { Point, Rect } from '@/types';
@@ -80,13 +80,12 @@ export function useCanvas() {
   // 使用键盘事件Hook
   const { moveSelectedItems } = useKeyEvents();
 
-  // 使用交互Hook
+  
   const {
     isDraggingCanvas,
     isDraggingItem,
     isSelecting,
     selectionRect,
-    tempPositions,
     snapGuides,
     handleMouseDown,
     handleMouseMove,
@@ -106,9 +105,11 @@ export function useCanvas() {
     previewPosition,
     handleDragOver,
     handleDragLeave,
-    handleDrop
+    handleDrop,
+    getPreviewStyle
   } = useDragAndDrop({
-    clientToWorldPosition
+    clientToWorldPosition,
+    camera
   });
 
   // 修正的useEffect，确保画布尺寸正确
@@ -278,6 +279,7 @@ export function useCanvas() {
     zoomOut,
     resetView,
     getCursorStyle,
-    clientToWorldPosition
+    clientToWorldPosition,
+    getPreviewStyle
   };
 }
