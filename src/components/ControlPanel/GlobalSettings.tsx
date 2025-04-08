@@ -34,15 +34,15 @@ const GlobalSettings: React.FC<GlobalSettingsProps> = ({
         <Switch id="auto-mag" checked={settings.autoMag} onCheckedChange={() => onToggle('autoMag')} />
       </div>
       <div className="flex items-center space-x-2 justify-between">
-        <Label htmlFor="show-box-code">显示盒子编码</Label>
+        <Label htmlFor="show-box-code">显示 Box Code</Label>
         <Switch id="show-box-code" checked={settings.showBoxCode} onCheckedChange={() => onToggle('showBoxCode')} />
       </div>
       <div className="flex items-center space-x-2 justify-between">
-        <Label htmlFor="show-equip-id">显示设备ID</Label>
+        <Label htmlFor="show-equip-id">显示 Equip ID</Label>
         <Switch id="show-equip-id" checked={settings.showEquipId} onCheckedChange={() => onToggle('showEquipId')} />
       </div>
       <div className="flex items-center space-x-2 justify-between">
-        <Label htmlFor="show-box-name">显示盒子名称</Label>
+        <Label htmlFor="show-box-name">显示 Box Name</Label>
         <Switch id="show-box-name" checked={settings.showBoxName} onCheckedChange={() => onToggle('showBoxName')} />
       </div>
     </div>

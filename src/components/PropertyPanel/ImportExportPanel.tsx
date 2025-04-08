@@ -48,7 +48,7 @@ const ImportExportPanel: React.FC = () => {
 
     try {
       const content = await readFileAsText(file);
-      const success = true; // importFromJSON(content);
+      const success = importFromJSON(content);
 
       if (success) {
         const store = useCanvasStore.getState();
@@ -269,7 +269,7 @@ const ImportExportPanel: React.FC = () => {
       </div>
 
       {/* 服务器操作按钮组 */}
-      <div className="space-y-3">
+      {/* <div className="space-y-3">
         <h4 className="text-sm font-medium">服务器操作</h4>
         <div className="grid grid-cols-1 gap-2">
           <Button
@@ -288,7 +288,7 @@ const ImportExportPanel: React.FC = () => {
             {loading ? '处理中...' : '从服务器加载'}
           </Button>
         </div>
-      </div>
+      </div> */}
 
       {/* 其他操作 */}
       <div className="pt-2">

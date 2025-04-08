@@ -26,7 +26,6 @@ const Canvas: React.FC = () => {
     handleDragOver,
     handleDragLeave,
     handleDrop,
-    handleDragEnter,
     zoomIn,
     zoomOut,
     resetView,
@@ -82,7 +81,6 @@ const Canvas: React.FC = () => {
             onMouseLeave={handleMouseUp}
             onContextMenu={handleContextMenu}
             onWheel={handleWheel}
-            onDragEnter={handleDragEnter}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}

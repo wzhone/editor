@@ -13,14 +13,14 @@ interface ColorPickerProps {
 
 // 预定义的颜色选项
 export const COLOR_PRESETS = [
+  { name: '白色', value: '#ffffff' },
+  { name: '黑色', value: '#000000' },
   { name: '钢蓝色', value: '#4682B4' },
   { name: '海洋绿', value: '#2E8B57' },
   { name: '砖红色', value: '#B22222' },
   { name: '金色', value: '#FFD700' },
   { name: '深兰花紫', value: '#9932CC' },
   { name: '深橙色', value: '#FF8C00' },
-  { name: '浅海洋绿', value: '#20B2AA' },
-  { name: '印度红', value: '#CD5C5C' }
 ];
 
 /**

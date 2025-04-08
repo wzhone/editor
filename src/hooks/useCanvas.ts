@@ -65,14 +65,13 @@ export function useCanvas() {
     visibleItems, 
     selectedItems 
   } = useRender({
-    canvasRef,
-    offscreenCanvasRef,
+    canvasRef: canvasRef as any,
+    offscreenCanvasRef: offscreenCanvasRef as any,
     dimensions,
     camera,
     isSelecting: false,  // 这些值会从交互Hook中更新
     selectionRect: null,
     isDraggingItem: false,
-    tempPositions: new Map(),
     visibleViewport
   });
 

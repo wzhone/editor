@@ -174,9 +174,12 @@ export const useCanvasStore = create<CanvasStore>((set, get) => {
           const updatedItem = {
             ...item,
             ...updates,
-            boxLeft:
-              updates.boxLeft !== undefined ? updates.boxLeft : item.boxLeft,
-            boxTop: updates.boxTop !== undefined ? updates.boxTop : item.boxTop,
+            boxLeft: Math.round(
+              updates.boxLeft !== undefined ? updates.boxLeft : item.boxLeft
+            ),
+            boxTop: Math.round(
+              updates.boxTop !== undefined ? updates.boxTop : item.boxTop
+            ),
           };
           newMap.set(id, updatedItem);
         }
@@ -199,10 +202,12 @@ export const useCanvasStore = create<CanvasStore>((set, get) => {
             const updatedItem = {
               ...item,
               ...updates,
-              boxLeft:
-                updates.boxLeft !== undefined ? updates.boxLeft : item.boxLeft,
-              boxTop:
-                updates.boxTop !== undefined ? updates.boxTop : item.boxTop,
+              boxLeft: Math.round(
+                updates.boxLeft !== undefined ? updates.boxLeft : item.boxLeft
+              ),
+              boxTop: Math.round(
+                updates.boxTop !== undefined ? updates.boxTop : item.boxTop
+              ),
             };
             newMap.set(id, updatedItem);
           }
@@ -212,7 +217,7 @@ export const useCanvasStore = create<CanvasStore>((set, get) => {
       });
     },
 
-    // 批量操作多个项目 - 性能优化版
+    // 批量操作多个项目
     batchUpdateItems: (itemUpdates) => {
       if (itemUpdates.length === 0) return;
 
@@ -227,10 +232,12 @@ export const useCanvasStore = create<CanvasStore>((set, get) => {
             const updatedItem = {
               ...item,
               ...updates,
-              boxLeft:
-                updates.boxLeft !== undefined ? updates.boxLeft : item.boxLeft,
-              boxTop:
-                updates.boxTop !== undefined ? updates.boxTop : item.boxTop,
+              boxLeft: Math.round(
+                updates.boxLeft !== undefined ? updates.boxLeft : item.boxLeft
+              ),
+              boxTop: Math.round(
+                updates.boxTop !== undefined ? updates.boxTop : item.boxTop
+              ),
             };
             newMap.set(id, updatedItem);
           }

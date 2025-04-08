@@ -119,7 +119,7 @@ const ElementProperties: React.FC<ElementPropertiesProps> = ({ item }) => {
 
       {/* 业务属性 */}
       <div>
-        <label className="block text-xs mb-1">盒子编码</label>
+        <label className="block text-xs mb-1">Box Code</label>
         <Input
           type="text"
           value={item.boxCode}
@@ -129,7 +129,7 @@ const ElementProperties: React.FC<ElementPropertiesProps> = ({ item }) => {
       </div>
 
       <div>
-        <label className="block text-xs mb-1">设备ID</label>
+        <label className="block text-xs mb-1">Equip ID</label>
         <Input
           type="text"
           value={item.equipId}
@@ -139,7 +139,7 @@ const ElementProperties: React.FC<ElementPropertiesProps> = ({ item }) => {
       </div>
 
       <div>
-        <label className="block text-xs mb-1">盒子名称</label>
+        <label className="block text-xs mb-1">Box Name</label>
         <Input
           type="text"
           value={item.boxName || ""}
@@ -149,7 +149,7 @@ const ElementProperties: React.FC<ElementPropertiesProps> = ({ item }) => {
       </div>
 
       <div>
-        <label className="block text-xs mb-1">位置ID</label>
+        <label className="block text-xs mb-1">Loc ID</label>
         <Input
           type="text"
           value={item.locId || ""}

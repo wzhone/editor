@@ -37,7 +37,6 @@ const PropertyPanel: React.FC = () => {
   useEffect(() => {
     // 订阅store变化
     const unsubscribe = useCanvasStore.subscribe(
-      (state) => state.itemsMap,
       () => {
         if (selectedItems.length > 0) {
           const items = useCanvasStore.getState().getItems();
