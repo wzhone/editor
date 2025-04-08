@@ -1,5 +1,4 @@
-// src/hooks/useCanvasInteraction.ts
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useCanvasStore } from "@/state/store";
 import { Point, Rect, CanvasItem } from "@/types";
 import * as CanvasUtils from "@/utils/canvasUtils";
@@ -48,9 +47,6 @@ export function useCanvasInteraction({
   const [itemStartPositions, setItemStartPositions] = useState<
     Map<string, { left: number; top: number }>
   >(new Map());
-  const [tempPositions, setTempPositions] = useState<
-    Map<string, { left: number; top: number }>
-  >(new Map());
   const [snapGuides, setSnapGuides] = useState<{
     horizontal: number[];
     vertical: number[];
@@ -63,9 +59,7 @@ export function useCanvasInteraction({
       const tolerance = 2 / camera.zoom; // 根据缩放级别动态调整点击容差
 
       // 按z-index反向排序，优先检测顶层元素
-      const sortedItems = [...visibleItems].sort(
-        (a, b) => (b.zIndex || 0) - (a.zIndex || 0)
-      );
+      const sortedItems = [...visibleItems]
 
       // 添加容差的检测区域
       const checkRect = {
@@ -112,19 +106,21 @@ export function useCanvasInteraction({
       const dx = worldPos.x - dragStartPoint.x;
       const dy = worldPos.y - dragStartPoint.y;
 
-      // 计算临时位置
-      const newTempPositions = new Map<string, { left: number; top: number }>();
+      // 存储计算后的新位置
+      const itemUpdates: Array<{ id: string; updates: Partial<CanvasItem> }> =
+        [];
       const newSnapGuides = {
         horizontal: [] as number[],
         vertical: [] as number[],
       };
 
-      // 先计算所有选中元素的新位置
+      // 计算所有选中元素的新位置
       const selectedItemsArray: CanvasItem[] = [];
-      const tempPositionsArray: {
+      const newPositionsArray: {
         id: string;
         item: CanvasItem;
-        newPos: { left: number; top: number };
+        newLeft: number;
+        newTop: number;
       }[] = [];
 
       for (const id of selectedItemIds) {
@@ -134,29 +130,28 @@ export function useCanvasInteraction({
         if (!item || !startPos) continue;
 
         // 基础位置（未吸附）
-        const newPos = {
-          left: startPos.left + dx,
-          top: startPos.top + dy,
-        };
+        const newLeft = startPos.left + dx;
+        const newTop = startPos.top + dy;
 
         selectedItemsArray.push(item);
-        tempPositionsArray.push({ id, item, newPos });
+        newPositionsArray.push({ id, item, newLeft, newTop });
       }
 
       // 如果启用了自动吸附，计算吸附位置
-      if (settings.autoMag && tempPositionsArray.length > 0) {
+      if (settings.autoMag && newPositionsArray.length > 0) {
         // 获取第一个元素做为吸附参考
         const {
           id: primaryId,
           item: primaryItem,
-          newPos: primaryPos,
-        } = tempPositionsArray[0];
+          newLeft: primaryLeft,
+          newTop: primaryTop,
+        } = newPositionsArray[0];
 
         // 创建一个临时项目来计算吸附
         const tempItem: CanvasItem = {
           ...primaryItem,
-          boxLeft: primaryPos.left,
-          boxTop: primaryPos.top,
+          boxLeft: primaryLeft,
+          boxTop: primaryTop,
         };
 
         // 计算吸附位置
@@ -169,8 +164,8 @@ export function useCanvasInteraction({
         );
 
         // 计算吸附偏移量
-        const snapDx = snappedPos.boxLeft - primaryPos.left;
-        const snapDy = snappedPos.boxTop - primaryPos.top;
+        const snapDx = snappedPos.boxLeft - primaryLeft;
+        const snapDy = snappedPos.boxTop - primaryTop;
 
         // 如果发生了吸附，更新所有选中元素的位置
         if (snapDx !== 0 || snapDy !== 0) {
@@ -189,27 +184,45 @@ export function useCanvasInteraction({
           }
 
           // 更新所有元素位置
-          for (const { id, newPos } of tempPositionsArray) {
-            newTempPositions.set(id, {
-              left: newPos.left + snapDx,
-              top: newPos.top + snapDy,
+          for (const { id, newLeft, newTop } of newPositionsArray) {
+            itemUpdates.push({
+              id,
+              updates: {
+                boxLeft: newLeft + snapDx,
+                boxTop: newTop + snapDy,
+              },
             });
           }
         } else {
           // 没有吸附，使用原始计算的位置
-          for (const { id, newPos } of tempPositionsArray) {
-            newTempPositions.set(id, newPos);
+          for (const { id, newLeft, newTop } of newPositionsArray) {
+            itemUpdates.push({
+              id,
+              updates: {
+                boxLeft: newLeft,
+                boxTop: newTop,
+              },
+            });
           }
         }
       } else {
         // 自动吸附被禁用，使用原始计算的位置
-        for (const { id, newPos } of tempPositionsArray) {
-          newTempPositions.set(id, newPos);
+        for (const { id, newLeft, newTop } of newPositionsArray) {
+          itemUpdates.push({
+            id,
+            updates: {
+              boxLeft: newLeft,
+              boxTop: newTop,
+            },
+          });
         }
       }
 
-      // 更新临时位置和吸附指引线
-      setTempPositions(newTempPositions);
+      // 直接更新元素位置
+      const store = useCanvasStore.getState();
+      store.batchUpdateItems(itemUpdates);
+
+      // 更新吸附指引线
       setSnapGuides(newSnapGuides);
     },
     [
@@ -361,24 +374,7 @@ export function useCanvasInteraction({
 
     // 处理元素拖拽结束
     if (isDraggingItem) {
-      // 拖拽结束时，将临时位置提交到全局 store
-      const store = useCanvasStore.getState();
-      const itemUpdates: Array<{ id: string; updates: Partial<CanvasItem> }> =
-        [];
-
-      tempPositions.forEach((pos, id) => {
-        itemUpdates.push({
-          id,
-          updates: { boxLeft: pos.left, boxTop: pos.top },
-        });
-      });
-
-      if (itemUpdates.length > 0) {
-        store.batchUpdateItems(itemUpdates);
-      }
-
       setIsDraggingItem(false);
-      setTempPositions(new Map());
       setItemStartPositions(new Map());
       setSnapGuides({ horizontal: [], vertical: [] });
     }
@@ -405,7 +401,6 @@ export function useCanvasInteraction({
     isDraggingItem,
     isSelecting,
     selectionRect,
-    tempPositions,
     visibleItems,
     selectItems,
   ]);
@@ -463,7 +458,6 @@ export function useCanvasInteraction({
     isDraggingItem,
     isSelecting,
     selectionRect,
-    tempPositions,
     snapGuides,
     handleMouseDown,
     handleMouseMove,

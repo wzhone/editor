@@ -1,4 +1,4 @@
-// src/hooks/useRender.ts
+// src/hooks/useRender.ts 修改版本
 import { useCallback, useMemo, useRef, useEffect } from "react";
 import { useCanvasStore } from "@/state/store";
 import { CanvasItem, Point, Rect } from "@/types";
@@ -13,7 +13,6 @@ interface UseRenderProps {
   isSelecting: boolean;
   selectionRect: Rect | null;
   isDraggingItem: boolean;
-  tempPositions: Map<string, { left: number; top: number }>;
   snapGuides: { horizontal: number[]; vertical: number[] };
   visibleViewport: {
     left: number;
@@ -33,7 +32,6 @@ export function useRender({
   isSelecting,
   selectionRect,
   isDraggingItem,
-  tempPositions,
   snapGuides,
   visibleViewport,
 }: UseRenderProps) {
@@ -87,11 +85,10 @@ export function useRender({
     (
       ctx: CanvasRenderingContext2D,
       item: CanvasItem,
-      isSelected: boolean,
-      overridePosition?: { left: number; top: number }
+      isSelected: boolean
     ) => {
-      const left = overridePosition ? overridePosition.left : item.boxLeft;
-      const top = overridePosition ? overridePosition.top : item.boxTop;
+      const left = item.boxLeft;
+      const top = item.boxTop;
       const width = item.boxWidth;
       const height = item.boxHeight;
       const { zoom } = camera;
@@ -271,10 +268,7 @@ export function useRender({
     // 绘制可见元素
     for (const item of sortedItems) {
       const isSelected = selectedItemIds.has(item.objid);
-      const overridePosition = isSelected
-        ? tempPositions.get(item.objid)
-        : undefined;
-      drawItem(offCtx, item, isSelected, overridePosition);
+      drawItem(offCtx, item, isSelected);
     }
 
     // 绘制选择框（如果存在）
@@ -331,7 +325,6 @@ export function useRender({
     selectionRect,
     settings,
     snapGuides,
-    tempPositions,
     visibleItems,
     canvasRef,
     offscreenCanvasRef,
