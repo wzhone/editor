@@ -437,11 +437,8 @@ export const useCanvasStore = create<CanvasStore>((set, get) => {
 
       try {
         const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
-
         if (!savedData) return false;
-
         const data = JSON.parse(savedData);
-
         if (!data.items || !Array.isArray(data.items)) {
           return false;
         }

@@ -47,10 +47,6 @@ export function useCanvasInteraction({
   const [itemStartPositions, setItemStartPositions] = useState<
     Map<string, { left: number; top: number }>
   >(new Map());
-  const [snapGuides, setSnapGuides] = useState<{
-    horizontal: number[];
-    vertical: number[];
-  }>({ horizontal: [], vertical: [] });
 
   // 查找指定位置的元素
   const findItemAtPosition = useCallback(
@@ -109,10 +105,6 @@ export function useCanvasInteraction({
       // 存储计算后的新位置
       const itemUpdates: Array<{ id: string; updates: Partial<CanvasItem> }> =
         [];
-      const newSnapGuides = {
-        horizontal: [] as number[],
-        vertical: [] as number[],
-      };
 
       // 计算所有选中元素的新位置
       const selectedItemsArray: CanvasItem[] = [];
@@ -169,19 +161,6 @@ export function useCanvasInteraction({
 
         // 如果发生了吸附，更新所有选中元素的位置
         if (snapDx !== 0 || snapDy !== 0) {
-          // 获取生成吸附指引线数据
-          for (const item of selectedItemsArray) {
-            const snapPoints = getSelectionEdgePoints([
-              {
-                ...item,
-                boxLeft: item.boxLeft + dx + snapDx,
-                boxTop: item.boxTop + dy + snapDy,
-              },
-            ]);
-
-            newSnapGuides.horizontal.push(...snapPoints.horizontal);
-            newSnapGuides.vertical.push(...snapPoints.vertical);
-          }
 
           // 更新所有元素位置
           for (const { id, newLeft, newTop } of newPositionsArray) {
@@ -221,9 +200,6 @@ export function useCanvasInteraction({
       // 直接更新元素位置
       const store = useCanvasStore.getState();
       store.batchUpdateItems(itemUpdates);
-
-      // 更新吸附指引线
-      setSnapGuides(newSnapGuides);
     },
     [
       isDraggingItem,
@@ -376,7 +352,6 @@ export function useCanvasInteraction({
     if (isDraggingItem) {
       setIsDraggingItem(false);
       setItemStartPositions(new Map());
-      setSnapGuides({ horizontal: [], vertical: [] });
     }
 
     // 处理框选结束
@@ -458,7 +433,6 @@ export function useCanvasInteraction({
     isDraggingItem,
     isSelecting,
     selectionRect,
-    snapGuides,
     handleMouseDown,
     handleMouseMove,
     handleMouseUp,

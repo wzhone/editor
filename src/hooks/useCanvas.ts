@@ -73,7 +73,6 @@ export function useCanvas() {
     selectionRect: null,
     isDraggingItem: false,
     tempPositions: new Map(),
-    snapGuides: { horizontal: [], vertical: [] },
     visibleViewport
   });
 
@@ -86,7 +85,6 @@ export function useCanvas() {
     isDraggingItem,
     isSelecting,
     selectionRect,
-    snapGuides,
     handleMouseDown,
     handleMouseMove,
     handleMouseUp,

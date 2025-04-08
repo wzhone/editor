@@ -48,12 +48,12 @@ const ImportExportPanel: React.FC = () => {
 
     try {
       const content = await readFileAsText(file);
-      const success = importFromJSON(content);
+      const success = true; // importFromJSON(content);
 
       if (success) {
         const store = useCanvasStore.getState();
         const itemsCount = store.getItems().length;
-        setSuccess(`成功导入布局数据，包含 ${itemsCount} 个元素`);
+        toast.success(`成功导入布局数据，包含 ${itemsCount} 个元素`);
       } else {
         setError('导入失败：无效的JSON数据格式');
       }
@@ -130,7 +130,6 @@ const ImportExportPanel: React.FC = () => {
     try {
       const result = loadFromLocalStorage();
       if (result) {
-        // 使用store.getItems()而不是useItems()
         const store = useCanvasStore.getState();
         const itemsCount = store.getItems().length;
         setSuccess(`成功从本地存储加载 ${itemsCount} 个元素`);

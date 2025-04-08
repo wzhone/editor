@@ -13,7 +13,6 @@ interface UseRenderProps {
   isSelecting: boolean;
   selectionRect: Rect | null;
   isDraggingItem: boolean;
-  snapGuides: { horizontal: number[]; vertical: number[] };
   visibleViewport: {
     left: number;
     top: number;
@@ -32,7 +31,6 @@ export function useRender({
   isSelecting,
   selectionRect,
   isDraggingItem,
-  snapGuides,
   visibleViewport,
 }: UseRenderProps) {
   // 动画帧引用
@@ -199,37 +197,6 @@ export function useRender({
     [camera]
   );
 
-  // 绘制自动吸附指引线
-  const drawSnapGuides = useCallback(
-    (ctx: CanvasRenderingContext2D) => {
-      const { zoom } = camera;
-
-      ctx.strokeStyle = "#FF0000";
-      ctx.lineWidth = 1 / zoom;
-      ctx.setLineDash([5 / zoom, 5 / zoom]);
-
-      // 绘制水平指引线
-      snapGuides.horizontal.forEach((y) => {
-        ctx.beginPath();
-        ctx.moveTo(visibleViewport.left, y);
-        ctx.lineTo(visibleViewport.right, y);
-        ctx.stroke();
-      });
-
-      // 绘制垂直指引线
-      snapGuides.vertical.forEach((x) => {
-        ctx.beginPath();
-        ctx.moveTo(x, visibleViewport.top);
-        ctx.lineTo(x, visibleViewport.bottom);
-        ctx.stroke();
-      });
-
-      // 重置线型
-      ctx.setLineDash([]);
-    },
-    [camera, snapGuides, visibleViewport]
-  );
-
   // 主渲染函数
   const render = useCallback(() => {
     const canvas = canvasRef.current;
@@ -276,15 +243,6 @@ export function useRender({
       drawSelectionRect(offCtx, selectionRect);
     }
 
-    // 绘制吸附指引线（如果启用自动吸附且有元素在拖动）
-    if (
-      settings.autoMag &&
-      isDraggingItem &&
-      snapGuides.horizontal.length + snapGuides.vertical.length > 0
-    ) {
-      drawSnapGuides(offCtx);
-    }
-
     // 恢复初始状态
     offCtx.restore();
 
@@ -318,13 +276,11 @@ export function useRender({
     drawGrid,
     drawItem,
     drawSelectionRect,
-    drawSnapGuides,
     isSelecting,
     isDraggingItem,
     selectedItemIds,
     selectionRect,
     settings,
-    snapGuides,
     visibleItems,
     canvasRef,
     offscreenCanvasRef,
