@@ -1,3 +1,4 @@
+// src/components/ControlPanel/DraggableElementCreator.tsx
 "use client";
 import React, { useState } from 'react';
 import { useCanvasStore } from '../../state/store';
@@ -15,7 +16,7 @@ interface ElementTemplate {
 }
 
 /**
- * 可拖拽的元素创建器组件
+ * 可拖拽的元素创建器组件 - 改进版
  * 提供多种预设模板并支持拖拽创建元素
  */
 const DraggableElementCreator: React.FC = () => {
@@ -74,35 +75,39 @@ const DraggableElementCreator: React.FC = () => {
     }
   ];
 
-  // 处理拖拽开始事件
+  // 处理拖拽开始事件 - 改进版
   const handleDragStart = (e: React.DragEvent, template: ElementTemplate) => {
     // 设置拖拽数据
-    e.dataTransfer.setData('application/json', JSON.stringify({
+    const templateData = {
       ...template,
       boxCode: templateItem.boxCode || '',
       equipId: templateItem.equipId || '',
       boxName: templateItem.boxName || '',
       locId: templateItem.locId || ''
-    }));
-
-    // 设置拖拽效果
+    };
+    
+    e.dataTransfer.setData('application/json', JSON.stringify(templateData));
     e.dataTransfer.effectAllowed = 'copy';
-
-    // 可选：设置拖拽图像
-    const dragImage = document.createElement('div');
-    dragImage.style.width = `${template.boxWidth}px`;
-    dragImage.style.height = `${template.boxHeight}px`;
-    dragImage.style.backgroundColor = template.showColor;
-    dragImage.style.border = '1px solid black';
-    dragImage.style.position = 'absolute';
-    dragImage.style.top = '-1000px';
-    document.body.appendChild(dragImage);
-
-    e.dataTransfer.setDragImage(dragImage, template.boxWidth / 2, template.boxHeight / 2);
-
+    
+    // 创建自定义拖拽图像
+    const dragPreview = document.createElement('div');
+    dragPreview.style.width = `${template.boxWidth}px`;
+    dragPreview.style.height = `${template.boxHeight}px`;
+    dragPreview.style.backgroundColor = template.showColor;
+    dragPreview.style.border = '1px solid black';
+    dragPreview.style.borderRadius = template.showType === 'ellipse' ? '50%' : '0';
+    dragPreview.style.position = 'absolute';
+    dragPreview.style.opacity = '0.8';
+    dragPreview.style.pointerEvents = 'none';
+    dragPreview.style.zIndex = '1000';
+    document.body.appendChild(dragPreview);
+    
+    // 设置拖拽图像
+    e.dataTransfer.setDragImage(dragPreview, template.boxWidth / 2, template.boxHeight / 2);
+    
     // 延迟删除拖拽图像
     setTimeout(() => {
-      document.body.removeChild(dragImage);
+      document.body.removeChild(dragPreview);
     }, 0);
   };
 
@@ -133,8 +138,7 @@ const DraggableElementCreator: React.FC = () => {
             title={`拖拽 ${template.name} 到画布`}
           >
             <div
-              className={`w-8 h-8 mb-1 border ${template.showType === 'ellipse' ? 'rounded-full' : 'rounded'
-                }`}
+              className={`w-8 h-8 mb-1 border ${template.showType === 'ellipse' ? 'rounded-full' : 'rounded'}`}
               style={{ backgroundColor: template.showColor }}
             />
             <span className="text-xs">{template.name}</span>
