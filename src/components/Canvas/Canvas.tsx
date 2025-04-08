@@ -1,20 +1,23 @@
 "use client";
-import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
-import { Stage, Layer, Group, Rect, Ellipse, Text } from 'react-konva';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useCanvasStore } from '../../state/store';
 import { CanvasItem, Point, Rect as RectType } from '../../types';
 import CanvasControls from './CanvasControls';
 import CanvasStatusBar from './CanvasStatusBar';
-import CanvasGrid from './CanvasGrid';
+import PerformanceMonitor from './PerformanceMonitor.tsx';
+import * as CanvasUtils from '../../utils/canvasUtils';
 
 /**
  * 画布组件
- * 使用React-Konva实现交互式画布
+ * 使用原生Canvas API实现交互式画布
  */
 const Canvas: React.FC = () => {
-  // Stage引用
-  const stageRef = useRef<any>(null);
+  // Canvas引用
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  
+  // 动画帧ID，用于取消动画
+  const animationFrameRef = useRef<number | null>(null);
 
   // 容器尺寸状态
   const [dimensions, setDimensions] = useState({
@@ -73,29 +76,254 @@ const Canvas: React.FC = () => {
     };
   }, []);
 
+  // 渲染函数：绘制网格
+  const drawGrid = useCallback((ctx: CanvasRenderingContext2D) => {
+    const { width, height } = dimensions;
+    const { position, zoom } = camera;
+    const gridSize = settings.gridSize;
+    
+    // 计算可见区域
+    const visibleLeft = -position.x / zoom;
+    const visibleTop = -position.y / zoom;
+    const visibleRight = visibleLeft + width / zoom;
+    const visibleBottom = visibleTop + height / zoom;
+    
+    // 使用工具函数绘制网格
+    CanvasUtils.drawGrid(
+      ctx,
+      visibleLeft,
+      visibleTop,
+      visibleRight,
+      visibleBottom,
+      gridSize,
+      zoom
+    );
+  }, [camera, dimensions, settings.gridSize]);
+
+  // 渲染函数：绘制单个元素
+  const drawItem = useCallback((ctx: CanvasRenderingContext2D, item: CanvasItem, isSelected: boolean, overridePosition?: { left: number; top: number }) => {
+    const left = overridePosition ? overridePosition.left : item.boxLeft;
+    const top = overridePosition ? overridePosition.top : item.boxTop;
+    const width = item.boxWidth;
+    const height = item.boxHeight;
+    const { zoom } = camera;
+    const lineWidth = isSelected ? 2 / zoom : 1 / zoom;
+    const strokeStyle = isSelected ? '#0000ff' : '#000000';
+
+    // 根据不同类型绘制图形
+    if (item.showType === "ellipse") {
+      const centerX = left + width / 2;
+      const centerY = top + height / 2;
+      const radiusX = width / 2;
+      const radiusY = height / 2;
+      
+      CanvasUtils.drawEllipse(
+        ctx,
+        centerX,
+        centerY,
+        radiusX,
+        radiusY,
+        item.showColor,
+        strokeStyle,
+        lineWidth
+      );
+    } else {
+      // 默认为矩形
+      CanvasUtils.drawRect(
+        ctx,
+        left,
+        top,
+        width,
+        height,
+        item.showColor,
+        strokeStyle,
+        lineWidth
+      );
+    }
+
+    // 绘制标签文本
+    const numLabels = [
+      settings.showBoxCode && item.boxCode,
+      settings.showEquipId && item.equipId,
+      settings.showBoxName && item.boxName
+    ].filter(Boolean).length;
+
+    if (numLabels > 0) {
+      const spacing = item.boxHeight / (numLabels + 1);
+      let positionIndex = 0;
+      const fontSize = CanvasUtils.getScaledFontSize(12, zoom);
+      ctx.fillStyle = '#000000';
+
+      if (settings.showBoxCode && item.boxCode) {
+        positionIndex++;
+        CanvasUtils.drawCenteredText(
+          ctx,
+          item.boxCode,
+          left + width / 2,
+          top + spacing * positionIndex,
+          width,
+          fontSize
+        );
+      }
+
+      if (settings.showEquipId && item.equipId) {
+        positionIndex++;
+        CanvasUtils.drawCenteredText(
+          ctx,
+          item.equipId,
+          left + width / 2,
+          top + spacing * positionIndex,
+          width,
+          fontSize
+        );
+      }
+
+      if (settings.showBoxName && item.boxName) {
+        positionIndex++;
+        CanvasUtils.drawCenteredText(
+          ctx,
+          item.boxName,
+          left + width / 2,
+          top + spacing * positionIndex,
+          width,
+          fontSize
+        );
+      }
+    }
+  }, [camera, settings]);
+
+  // 渲染函数：绘制选择框
+  const drawSelectionRect = useCallback((ctx: CanvasRenderingContext2D, rect: RectType) => {
+    const { zoom } = camera;
+    
+    CanvasUtils.drawSelectionRect(
+      ctx,
+      rect.x,
+      rect.y,
+      rect.width,
+      rect.height,
+      '#0066cc',
+      'rgba(0, 102, 204, 0.1)',
+      1 / zoom,
+      [5 / zoom, 5 / zoom]
+    );
+  }, [camera]);
+
+  // 渲染主函数
+  const render = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // 调整Canvas分辨率以匹配设备像素比
+    const devicePixelRatio = window.devicePixelRatio || 1;
+    canvas.width = dimensions.width * devicePixelRatio;
+    canvas.height = dimensions.height * devicePixelRatio;
+    
+    // 应用设备像素比缩放
+    ctx.scale(devicePixelRatio, devicePixelRatio);
+    
+    // 清除画布
+    CanvasUtils.clearCanvas(ctx, dimensions.width, dimensions.height);
+    
+    // 保存初始状态
+    ctx.save();
+    
+    // 应用相机变换
+    ctx.translate(camera.position.x, camera.position.y);
+    ctx.scale(camera.zoom, camera.zoom);
+    
+    // 计算可见视口区域（世界坐标）
+    const visibleLeft = -camera.position.x / camera.zoom;
+    const visibleTop = -camera.position.y / camera.zoom;
+    const visibleRight = visibleLeft + dimensions.width / camera.zoom;
+    const visibleBottom = visibleTop + dimensions.height / camera.zoom;
+    
+    // 绘制网格
+    drawGrid(ctx);
+
+    // 获取元素列表
+    const items = getItems();
+    
+    // 获取视口内的元素并按Z轴排序
+    const visibleItems = CanvasUtils.getVisibleItems(
+      items,
+      visibleLeft,
+      visibleTop,
+      visibleRight,
+      visibleBottom
+    );
+    
+    const sortedItems = CanvasUtils.sortItemsByZIndex(visibleItems);
+    
+    // 绘制可见元素
+    for (const item of sortedItems) {
+      const isSelected = selectedItemIds.has(item.objid);
+      const overridePosition = isSelected ? tempPositions.get(item.objid) : undefined;
+      drawItem(ctx, item, isSelected, overridePosition);
+    }
+    
+    // 绘制选择框（如果存在）
+    if (isSelecting && selectionRect) {
+      drawSelectionRect(ctx, selectionRect);
+    }
+    
+    // 恢复初始状态
+    ctx.restore();
+    
+    // 请求下一帧动画
+    animationFrameRef.current = requestAnimationFrame(render);
+  }, [
+    camera, 
+    dimensions, 
+    drawGrid, 
+    drawItem, 
+    drawSelectionRect, 
+    getItems, 
+    isSelecting, 
+    selectedItemIds, 
+    selectionRect, 
+    tempPositions
+  ]);
+
+  // 设置渲染循环
+  useEffect(() => {
+    if (dimensions.width > 0 && dimensions.height > 0) {
+      animationFrameRef.current = requestAnimationFrame(render);
+    }
+    
+    return () => {
+      if (animationFrameRef.current !== null) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, [dimensions, render]);
+
   // 处理缩放
   const handleWheel = useCallback(
-    (e: any) => {
-      e.evt.preventDefault();
-
-      if (!stageRef.current) return;
+    (e: React.WheelEvent<HTMLCanvasElement>) => {
+      e.preventDefault();
 
       const scaleBy = 1.1;
-      const stage = stageRef.current;
+      const oldScale = camera.zoom;
+      
+      // 获取画布上的鼠标位置
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
 
-      // 获取指针位置（相对于舞台）
-      const oldScale = stage.scaleX();
-      const pointer = stage.getPointerPosition() as any;
-
-      if (!pointer) return;
-
+      // 计算鼠标位置相对于画布内容的位置
       const mousePointTo = {
-        x: (pointer.x - stage.x()) / oldScale,
-        y: (pointer.y - stage.y()) / oldScale,
+        x: (mouseX - camera.position.x) / oldScale,
+        y: (mouseY - camera.position.y) / oldScale,
       };
 
       // 计算新的缩放级别
-      let newScale = e.evt.deltaY < 0 ? oldScale * scaleBy : oldScale / scaleBy;
+      let newScale = e.deltaY < 0 ? oldScale * scaleBy : oldScale / scaleBy;
       newScale = Math.max(minZoom, Math.min(maxZoom, newScale)); // 限制缩放范围
 
       // 如果缩放级别没有变化，直接返回
@@ -103,8 +331,8 @@ const Canvas: React.FC = () => {
 
       // 更新相机位置，保持鼠标指向的内容不变
       const newPos = {
-        x: pointer.x - mousePointTo.x * newScale,
-        y: pointer.y - mousePointTo.y * newScale,
+        x: mouseX - mousePointTo.x * newScale,
+        y: mouseY - mousePointTo.y * newScale,
       };
 
       // 更新状态
@@ -113,76 +341,59 @@ const Canvas: React.FC = () => {
         zoom: newScale,
       });
     },
-    [updateCamera]
+    [camera.position, camera.zoom, updateCamera]
   );
-
+  
   // 检查矩形与元素是否相交
-  const rectIntersectsItem = (rect: RectType, item: CanvasItem): boolean => {
-    const itemRect = {
-      x: item.boxLeft,
-      y: item.boxTop,
-      width: item.boxWidth,
-      height: item.boxHeight
-    };
-
-    return !(
-      rect.x > itemRect.x + itemRect.width ||
-      rect.x + rect.width < itemRect.x ||
-      rect.y > itemRect.y + itemRect.height ||
-      rect.y + rect.height < itemRect.y
-    );
-  };
+  const rectIntersectsItem = useCallback((rect: RectType, item: CanvasItem): boolean => {
+    return CanvasUtils.rectIntersectsItem(rect, item);
+  }, []);
 
   // 查找指定位置的元素
   const findItemAtPosition = useCallback(
     (pos: Point): CanvasItem | undefined => {
-
-      console.log("findItemAtPosition", pos);
       const items = getItems();
+      
+      // 按z-index反向排序，这样可以先检测顶层元素
       const sortedItems = [...items].sort(
         (a, b) => (b.zIndex || 0) - (a.zIndex || 0)
       );
-      console.log("findItemAtPosition sorted", pos);
 
-      const i = sortedItems.find((item) => {
-        if (item.showType === "ellipse") {
-          const rx = item.boxWidth / 2;
-          const ry = item.boxHeight / 2;
-          const cx = item.boxLeft + rx;
-          const cy = item.boxTop + ry;
-          const dx = (pos.x - cx) / rx;
-          const dy = (pos.y - cy) / ry;
-          return dx * dx + dy * dy <= 1;
-        } else {
-          return (
-            pos.x >= item.boxLeft &&
-            pos.x <= item.boxLeft + item.boxWidth &&
-            pos.y >= item.boxTop &&
-            pos.y <= item.boxTop + item.boxHeight
-          );
-        }
-      });
-      console.log("findItemAtPosition finded", pos);
-      return i
+      return sortedItems.find((item) => CanvasUtils.isPointInItem(pos, item));
     },
     [getItems]
   );
 
-  // 处理舞台拖动开始
-  const handleDragStart = useCallback(
-    (e: any) => {
-      if (!stageRef.current) return;
+  // 将客户端坐标转换为画布世界坐标
+  const clientToWorldPosition = useCallback(
+    (clientX: number, clientY: number): Point => {
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (!rect) {
+        return { x: 0, y: 0 };
+      }
+      
+      return CanvasUtils.clientToWorldPosition(
+        clientX,
+        clientY,
+        rect,
+        camera.position,
+        camera.zoom
+      );
+    },
+    [camera]
+  );
 
+  // 处理鼠标按下事件
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement>) => {
       // 检查是否按下了右键（用于拖动画布）
-      if (e.evt.button === 2) {
-        e.evt.preventDefault();
-        e.evt.stopPropagation();
+      if (e.button === 2) {
+        e.preventDefault();
+        e.stopPropagation();
 
         setIsDraggingCanvas(true);
-        const stage = stageRef.current;
-        const pointerPos = stage.getPointerPosition();
-        if (!pointerPos) return;
-
+        const pointerPos = { x: e.clientX, y: e.clientY };
+        
         setDragStartPos({
           x: pointerPos.x - camera.position.x,
           y: pointerPos.y - camera.position.y
@@ -190,22 +401,13 @@ const Canvas: React.FC = () => {
         return;
       }
 
-      const stage = stageRef.current;
-      const pointerPos = stage.getPointerPosition();
-      if (!pointerPos) return;
-
-      const scale = stage.scaleX();
-      const worldPos = {
-        x: (pointerPos.x - stage.x()) / scale,
-        y: (pointerPos.y - stage.y()) / scale,
-      };
-
+      const worldPos = clientToWorldPosition(e.clientX, e.clientY);
       setDragStartPoint(worldPos);
 
       const clickedItem = findItemAtPosition(worldPos);
 
       if (clickedItem) {
-        if (e.evt.ctrlKey || e.evt.metaKey) {
+        if (e.ctrlKey || e.metaKey) {
           selectItem(clickedItem.objid, true);
         } else if (!selectedItemIds.has(clickedItem.objid)) {
           selectItem(clickedItem.objid, false);
@@ -233,7 +435,6 @@ const Canvas: React.FC = () => {
         }
 
         setItemStartPositions(startPositions);
-        stage.batchDraw();
       } else {
         clearSelection();
         setIsSelecting(true);
@@ -245,17 +446,22 @@ const Canvas: React.FC = () => {
         });
       }
     },
-    [camera.position, findItemAtPosition, selectItem, selectedItemIds, clearSelection, getItems]
+    [
+      camera.position, 
+      clientToWorldPosition, 
+      findItemAtPosition, 
+      selectItem, 
+      selectedItemIds, 
+      clearSelection, 
+      getItems
+    ]
   );
 
-  // 处理拖动移动
-  const handleDragMove = useCallback(
-    (e: any) => {
-      if (!stageRef.current) return;
-      const stage = stageRef.current;
-      const pointerPos = stage.getPointerPosition();
-      if (!pointerPos) return;
-
+  // 处理鼠标移动事件
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement>) => {
+      const pointerPos = { x: e.clientX, y: e.clientY };
+      
       if (isDraggingCanvas && dragStartPos) {
         const newPosition = {
           x: pointerPos.x - dragStartPos.x,
@@ -265,15 +471,10 @@ const Canvas: React.FC = () => {
         updateCamera({
           position: newPosition
         });
-        stage.position(newPosition);
         return;
       }
 
-      const scale = stage.scaleX();
-      const worldPos = {
-        x: (pointerPos.x - stage.x()) / scale,
-        y: (pointerPos.y - stage.y()) / scale,
-      };
+      const worldPos = clientToWorldPosition(e.clientX, e.clientY);
 
       if (isDraggingItem && selectedItemIds.size > 0 && dragStartPoint) {
         const dx = worldPos.x - dragStartPoint.x;
@@ -302,6 +503,7 @@ const Canvas: React.FC = () => {
       isDraggingCanvas,
       dragStartPos,
       updateCamera,
+      clientToWorldPosition,
       isDraggingItem,
       selectedItemIds,
       dragStartPoint,
@@ -311,8 +513,8 @@ const Canvas: React.FC = () => {
     ]
   );
 
-  // 处理拖动结束
-  const handleDragEnd = useCallback(() => {
+  // 处理鼠标抬起事件
+  const handleMouseUp = useCallback(() => {
     if (isDraggingCanvas) {
       setIsDraggingCanvas(false);
       setDragStartPos(null);
@@ -350,6 +552,7 @@ const Canvas: React.FC = () => {
     isSelecting,
     selectionRect,
     getItems,
+    rectIntersectsItem,
     selectItems,
     tempPositions,
     updateItem
@@ -485,10 +688,13 @@ const Canvas: React.FC = () => {
     };
   }, [handleKeyDown]);
 
+  // 防止右键菜单
+  const handleContextMenu = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+  }, []);
+
   // 重置视图
   const resetView = useCallback(() => {
-    if (!stageRef.current) return;
-
     const newScale = 1;
     const newPos = { x: 0, y: 0 };
 
@@ -496,72 +702,57 @@ const Canvas: React.FC = () => {
       position: newPos,
       zoom: newScale,
     });
-
-    stageRef.current.scale({ x: newScale, y: newScale });
-    stageRef.current.position(newPos);
   }, [updateCamera]);
 
   // 放大
   const zoomIn = useCallback(() => {
-    if (!stageRef.current) return;
-
-    const stage = stageRef.current;
-    const oldScale = stage.scaleX();
+    const oldScale = camera.zoom;
     const newScale = Math.min(oldScale * 1.2, maxZoom);
 
-    const width = stage.width();
-    const height = stage.height();
-    const oldPos = stage.position();
-
-    const centerX = width / 2;
-    const centerY = height / 2;
-    const relX = (centerX - oldPos.x) / oldScale;
-    const relY = (centerY - oldPos.y) / oldScale;
-
+    // 计算画布中心
+    const centerX = dimensions.width / 2;
+    const centerY = dimensions.height / 2;
+    
+    // 计算画布中心在世界坐标中的位置
+    const worldCenterX = (centerX - camera.position.x) / oldScale;
+    const worldCenterY = (centerY - camera.position.y) / oldScale;
+    
+    // 计算新的相机位置，保持画布中心对准相同的世界坐标
     const newPos = {
-      x: centerX - relX * newScale,
-      y: centerY - relY * newScale,
+      x: centerX - worldCenterX * newScale,
+      y: centerY - worldCenterY * newScale,
     };
 
     updateCamera({
       position: newPos,
       zoom: newScale,
     });
-
-    stage.scale({ x: newScale, y: newScale });
-    stage.position(newPos);
-  }, [updateCamera]);
+  }, [camera, dimensions, updateCamera]);
 
   // 缩小
   const zoomOut = useCallback(() => {
-    if (!stageRef.current) return;
-
-    const stage = stageRef.current;
-    const oldScale = stage.scaleX();
+    const oldScale = camera.zoom;
     const newScale = Math.max(oldScale / 1.2, minZoom);
 
-    const width = stage.width();
-    const height = stage.height();
-    const oldPos = stage.position();
-
-    const centerX = width / 2;
-    const centerY = height / 2;
-    const relX = (centerX - oldPos.x) / oldScale;
-    const relY = (centerY - oldPos.y) / oldScale;
-
+    // 计算画布中心
+    const centerX = dimensions.width / 2;
+    const centerY = dimensions.height / 2;
+    
+    // 计算画布中心在世界坐标中的位置
+    const worldCenterX = (centerX - camera.position.x) / oldScale;
+    const worldCenterY = (centerY - camera.position.y) / oldScale;
+    
+    // 计算新的相机位置，保持画布中心对准相同的世界坐标
     const newPos = {
-      x: centerX - relX * newScale,
-      y: centerY - relY * newScale,
+      x: centerX - worldCenterX * newScale,
+      y: centerY - worldCenterY * newScale,
     };
 
     updateCamera({
       position: newPos,
       zoom: newScale,
     });
-
-    stage.scale({ x: newScale, y: newScale });
-    stage.position(newPos);
-  }, [updateCamera]);
+  }, [camera, dimensions, updateCamera]);
 
   // 根据当前交互状态返回鼠标样式
   const getCursorStyle = useCallback(() => {
@@ -571,149 +762,8 @@ const Canvas: React.FC = () => {
     return "default";
   }, [isDraggingCanvas, isDraggingItem, isSelecting]);
 
-  // 防止右键菜单
-  const handleContextMenu = useCallback((e: any) => {
-    e.evt.preventDefault();
-  }, []);
-
-  // 渲染单个画布元素，新增 overridePosition 用于拖拽期间覆盖位置数据
-  const CanvasElement = useCallback(({
-    item,
-    isSelected,
-    overridePosition,
-  }: {
-    item: CanvasItem;
-    isSelected: boolean;
-    overridePosition?: { left: number; top: number };
-  }) => {
-    const left = overridePosition ? overridePosition.left : item.boxLeft;
-    const top = overridePosition ? overridePosition.top : item.boxTop;
-
-    // 根据不同类型渲染图形
-    const renderShape = () => {
-      if (item.showType === "ellipse") {
-        return (
-          <Ellipse
-            x={left + item.boxWidth / 2}
-            y={top + item.boxHeight / 2}
-            radiusX={item.boxWidth / 2}
-            radiusY={item.boxHeight / 2}
-            fill={item.showColor}
-            stroke={isSelected ? '#0000ff' : '#000000'}
-            strokeWidth={isSelected ? 2 / camera.zoom : 1 / camera.zoom}
-            perfectDrawEnabled={false}
-          />
-        );
-      }
-      return (
-        <Rect
-          x={left}
-          y={top}
-          width={item.boxWidth}
-          height={item.boxHeight}
-          fill={item.showColor}
-          stroke={isSelected ? '#0000ff' : '#000000'}
-          strokeWidth={isSelected ? 2 / camera.zoom : 1 / camera.zoom}
-          perfectDrawEnabled={false}
-        />
-      );
-    };
-
-    // 渲染标签文本
-    const renderLabels = () => {
-      const labels = [];
-      const numLabels = [
-        settings.showBoxCode && item.boxCode,
-        settings.showEquipId && item.equipId,
-        settings.showBoxName && item.boxName
-      ].filter(Boolean).length;
-
-      if (numLabels > 0) {
-        const spacing = item.boxHeight / (numLabels + 1);
-        let positionIndex = 0;
-
-        if (settings.showBoxCode && item.boxCode) {
-          positionIndex++;
-          labels.push(
-            <Text
-              key="boxCode"
-              x={left}
-              y={top + spacing * positionIndex - 8}
-              text={item.boxCode}
-              width={item.boxWidth}
-              align="center"
-              fontSize={12 / camera.zoom}
-              fill="#000000"
-              perfectDrawEnabled={false}
-            />
-          );
-        }
-
-        if (settings.showEquipId && item.equipId) {
-          positionIndex++;
-          labels.push(
-            <Text
-              key="equipId"
-              x={left}
-              y={top + spacing * positionIndex - 8}
-              text={item.equipId}
-              width={item.boxWidth}
-              align="center"
-              fontSize={12 / camera.zoom}
-              fill="#000000"
-              perfectDrawEnabled={false}
-            />
-          );
-        }
-
-        if (settings.showBoxName && item.boxName) {
-          positionIndex++;
-          labels.push(
-            <Text
-              key="boxName"
-              x={left}
-              y={top + spacing * positionIndex - 8}
-              text={item.boxName}
-              width={item.boxWidth}
-              align="center"
-              fontSize={12 / camera.zoom}
-              fill="#000000"
-              perfectDrawEnabled={false}
-            />
-          );
-        }
-      }
-      return labels;
-    };
-
-    return (
-      <Group>
-        {renderShape()}
-        {renderLabels()}
-      </Group>
-    );
-  }, [camera.zoom, settings]);
-
-  // 使用React.memo优化元素渲染
-  const MemoizedCanvasElement = React.memo(CanvasElement);
-
-  // 缓存需要渲染的元素
-  const renderItems = useMemo(() => {
-    return Array.from(itemsMap).map(([objid, item]) => {
-      return (
-        <MemoizedCanvasElement
-          key={objid}
-          item={item}
-          isSelected={selectedItemIds.has(objid)}
-          overridePosition={
-            selectedItemIds.has(objid)
-              ? tempPositions.get(objid)
-              : undefined
-          }
-        />
-      );
-    });
-  }, [itemsMap])
+  // 监控开发环境中的性能
+  const isDev = process.env.NODE_ENV === 'development';
 
   return (
     <div className="flex flex-col h-full w-full">
@@ -735,64 +785,28 @@ const Canvas: React.FC = () => {
         }}
       >
         {dimensions.width > 0 && dimensions.height > 0 && (
-          <Stage
-            ref={stageRef}
+          <canvas
+            ref={canvasRef}
             width={dimensions.width}
             height={dimensions.height}
-            scaleX={camera.zoom}
-            scaleY={camera.zoom}
-            x={camera.position.x}
-            y={camera.position.y}
-            draggable={false}
-            onWheel={handleWheel}
-            onMouseDown={handleDragStart}
-            onMouseMove={handleDragMove}
-            onMouseUp={handleDragEnd}
-            onMouseLeave={handleDragEnd}
-            onTouchStart={handleDragStart}
-            onTouchMove={handleDragMove}
-            onTouchEnd={handleDragEnd}
+            style={{
+              width: '100%',
+              height: '100%'
+            }}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
             onContextMenu={handleContextMenu}
-          >
-            {/* 背景网格层 */}
-            <Layer>
-              <CanvasGrid
-                width={dimensions.width / camera.zoom}
-                height={dimensions.height / camera.zoom}
-                gridSize={50}
-              />
-            </Layer>
-
-            {/* 主要内容层 - 只渲染视口内的元素 */}
-            <Layer>
-              <Group>
-                {renderItems}
-              </Group>
-            </Layer>
-
-            {/* 选择框层 */}
-            {isSelecting && selectionRect && (
-              <Layer>
-                <Group>
-                  <Rect
-                    x={selectionRect.x}
-                    y={selectionRect.y}
-                    width={selectionRect.width}
-                    height={selectionRect.height}
-                    stroke="#0066cc"
-                    strokeWidth={1 / camera.zoom}
-                    dash={[5 / camera.zoom, 5 / camera.zoom]}
-                    fill="#0066cc"
-                    opacity={0.1}
-                  />
-                </Group>
-              </Layer>
-            )}
-          </Stage>
+            onWheel={handleWheel}
+          />
         )}
 
         {/* 状态指示器 */}
         <CanvasStatusBar />
+        
+        {/* 性能监视器 - 仅在开发环境中显示 */}
+        {isDev && <PerformanceMonitor enabled={true} />}
       </div>
     </div>
   );
