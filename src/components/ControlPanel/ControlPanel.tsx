@@ -1,15 +1,15 @@
 "use client";
 import React from 'react';
 import { useCanvasStore } from '../../state/store';
-import ElementCreator from './ElementCreator';
+import DraggableElementCreator from './DraggableElementCreator';
 import GlobalSettings from './GlobalSettings';
 
 /**
- * 左侧控制面板组件
- * 包含元素创建、全局设置、数据控制等功能
+ * 左侧控制面板组件 - 优化版
+ * 使用可拖拽元素创建器替代原始的点击创建方式
  */
 const ControlPanel: React.FC = () => {
-  const { settings, updateSettings, items } = useCanvasStore();
+  const { settings, updateSettings } = useCanvasStore();
 
   // 切换设置
   const handleToggleSetting = (setting: string, value?: boolean) => {
@@ -24,10 +24,10 @@ const ControlPanel: React.FC = () => {
         <h2 className="text-lg font-semibold">编辑器</h2>
       </div>
 
-      {/* 元素创建 */}
+      {/* 元素创建 - 使用拖拽创建器 */}
       <div className="p-3 border-b">
         <h3 className="text-sm font-medium mb-2">创建元素</h3>
-        <ElementCreator />
+        <DraggableElementCreator />
       </div>
 
       {/* 全局设置 */}
@@ -54,10 +54,11 @@ const ControlPanel: React.FC = () => {
         </ul>
         <h4 className="font-medium my-1">操作说明:</h4>
         <ul className="space-y-1 ml-2">
+          <li>从左侧拖拽元素到画布</li>
           <li>右键拖动平移画布</li>
           <li>鼠标滚轮缩放</li>
-          <li>方向键移动元素</li>
-          <li>Delete 键删除元素</li>
+          <li>拖拽移动元素（启用自动吸附）</li>
+          <li>框选多个元素</li>
         </ul>
       </div>
     </div>

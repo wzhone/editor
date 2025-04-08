@@ -1,9 +1,9 @@
-// src/state/store.ts
+// src/state/store.ts - 优化版全局状态管理
 "use client";
 import { create } from "zustand";
 import { CanvasItem, Point, Rect, CameraState } from "../types";
 import { createJSONBlob, downloadBlob } from "../utils/file";
-import { generateId } from "../utils/idGenerator";
+import { generateId, initIdCounter } from "../utils/idGenerator";
 
 // 默认配置
 const LOCAL_STORAGE_KEY = "canvas-editor-state";
@@ -61,6 +61,7 @@ interface CanvasStore {
   getItems: () => CanvasItem[];
   getSelectedItems: () => CanvasItem[];
 
+  // 元素操作方法
   addItemFromTemplate: (template: Partial<CanvasItem>) => string;
   deleteItemById: (itemId: string) => void;
   selectItemById: (itemId: string) => void;
@@ -72,6 +73,9 @@ interface CanvasStore {
     direction: "up" | "down" | "left" | "right",
     template: Partial<CanvasItem>
   ) => void;
+  
+  // 批量操作
+  batchUpdateItems: (updates: { id: string; updates: Partial<CanvasItem> }[]) => void;
 }
 
 // 初始状态
@@ -126,8 +130,13 @@ export const useCanvasStore = create<CanvasStore>((set, get) => {
 
     // 设置所有项目
     setItems: (items) => {
-      cachedItems = null; // 清除缓存
+      // 初始化ID计数器
+      initIdCounter(items);
+      
+      // 清除缓存
+      cachedItems = null;
       cachedSelectedItems = null;
+      
       set({
         itemsMap: new Map(items.map((item) => [item.objid, item])),
       });
@@ -181,6 +190,34 @@ export const useCanvasStore = create<CanvasStore>((set, get) => {
         const newMap = new Map(state.itemsMap);
 
         for (const id of ids) {
+          const item = newMap.get(id);
+          if (item) {
+            const updatedItem = {
+              ...item,
+              ...updates,
+              boxLeft:
+                updates.boxLeft !== undefined ? updates.boxLeft : item.boxLeft,
+              boxTop:
+                updates.boxTop !== undefined ? updates.boxTop : item.boxTop,
+            };
+            newMap.set(id, updatedItem);
+          }
+        }
+
+        return { itemsMap: newMap };
+      });
+    },
+    
+    // 批量操作多个项目 - 性能优化版
+    batchUpdateItems: (itemUpdates) => {
+      if (itemUpdates.length === 0) return;
+
+      cachedItems = null; // 清除缓存
+      cachedSelectedItems = null;
+      set((state) => {
+        const newMap = new Map(state.itemsMap);
+
+        for (const { id, updates } of itemUpdates) {
           const item = newMap.get(id);
           if (item) {
             const updatedItem = {
@@ -341,6 +378,9 @@ export const useCanvasStore = create<CanvasStore>((set, get) => {
           throw new Error("无效的JSON数据格式");
         }
 
+        // 初始化ID计数器
+        initIdCounter(data.items);
+        
         // 设置项目
         get().setItems(data.items);
 
@@ -402,6 +442,9 @@ export const useCanvasStore = create<CanvasStore>((set, get) => {
           return false;
         }
 
+        // 初始化ID计数器
+        initIdCounter(data.items);
+        
         // 设置项目
         get().setItems(data.items);
 
@@ -453,7 +496,7 @@ export const useCanvasStore = create<CanvasStore>((set, get) => {
 
       for (const id of currentSelectedIds) {
         const item = state.itemsMap.get(id);
-        if (item) {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+        if (item) {
           items.push(item);
         }
       }
@@ -488,14 +531,7 @@ export const useCanvasStore = create<CanvasStore>((set, get) => {
 
     // 删除元素
     deleteItemById: (itemId) => {
-      const { selectedItemIds, removeItem } = get();
-
-      removeItem(itemId);
-
-      // 如果删除的是当前选中的元素，清除选择
-      if (selectedItemIds.has(itemId)) {
-        get().clearSelection();
-      }
+      get().removeItem(itemId);
     },
 
     // 选择元素

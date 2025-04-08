@@ -1,36 +1,46 @@
+// src/utils/idGenerator.ts - 优化版ID生成器
+import { CanvasItem } from "../types";
+
+// 全局ID计数器
+let globalCounter: number = 0;
+
 /**
- * 生成一个唯一ID
- * 使用时间戳和随机字符串组合，确保ID的唯一性
- * @returns 生成的唯一ID字符串
+ * 从现有项目中找出最大的ID序号
+ * @param items 当前画布上的所有元素
+ * @returns 初始化的ID计数器
+ */
+export const initIdCounter = (items: CanvasItem[]): void => {
+  // 如果没有元素，从0开始
+  if (items.length === 0) {
+    globalCounter = 0;
+    return;
+  }
+  
+  // 查找数字ID中的最大值
+  let maxId = 0;
+  
+  for (const item of items) {
+    // 尝试从ID中提取数字部分
+    const matches = item.objid.match(/^item-(\d+)$/);
+    if (matches && matches[1]) {
+      const idNum = parseInt(matches[1], 10);
+      if (!isNaN(idNum) && idNum > maxId) {
+        maxId = idNum;
+      }
+    }
+  }
+  
+  // 设置全局计数器为最大ID + 1
+  globalCounter = maxId + 1;
+};
+
+/**
+ * 生成一个序列化的唯一ID
+ * 格式: item-123
+ * @returns 递增的唯一ID字符串
  */
 export const generateId = (): string => {
-  return Date.now().toString(36) + Math.random().toString(36).substring(2, 9);
-};
-
-/**
- * 生成一个指定前缀的唯一ID
- * @param prefix ID前缀
- * @returns 带前缀的唯一ID字符串
- */
-export const generatePrefixedId = (prefix: string): string => {
-  return `${prefix}-${generateId()}`;
-};
-
-/**
- * 生成一个指定长度的随机ID
- * @param length ID长度，默认为12
- * @returns 指定长度的随机ID字符串
- */
-export const generateRandomId = (length: number = 12): string => {
-  const chars =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let result = "";
-
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-
-  return result;
+  return `item-${globalCounter++}`;
 };
 
 /**
@@ -39,16 +49,13 @@ export const generateRandomId = (length: number = 12): string => {
  * @returns 布尔值，表示ID是否有效
  */
 export const isValidId = (id: string): boolean => {
-  // ID不能为空且长度必须大于等于8
-  return !!id && id.length >= 8;
+  // 匹配格式 "item-数字"
+  return /^item-\d+$/.test(id);
 };
 
 /**
- * 提取ID的前缀部分（如果有）
- * @param id 带前缀的ID，格式为 "prefix-id"
- * @returns ID的前缀部分，如果没有前缀则返回null
+ * 重置ID计数器（用于测试或完全清空画布后）
  */
-export const extractIdPrefix = (id: string): string | null => {
-  const parts = id.split("-");
-  return parts.length > 1 ? parts[0] : null;
+export const resetIdCounter = (): void => {
+  globalCounter = 0;
 };
