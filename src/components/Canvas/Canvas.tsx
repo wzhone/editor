@@ -1,11 +1,10 @@
 "use client";
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { useCanvasStore } from '../../state/store';
-import { CanvasItem, Point, Rect as RectType } from '../../types';
+import { useCanvasStore } from '@/state/store';
+import { CanvasItem, Point, Rect as RectType } from '@/types';
 import CanvasControls from './CanvasControls';
 import CanvasStatusBar from './CanvasStatusBar';
-import PerformanceMonitor from './PerformanceMonitor.tsx';
-import * as CanvasUtils from '../../utils/canvasUtils';
+import * as CanvasUtils from '@/utils/canvasUtils';
 
 /**
  * 画布组件
@@ -15,7 +14,7 @@ const Canvas: React.FC = () => {
   // Canvas引用
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  
+
   // 动画帧ID，用于取消动画
   const animationFrameRef = useRef<number | null>(null);
 
@@ -81,13 +80,13 @@ const Canvas: React.FC = () => {
     const { width, height } = dimensions;
     const { position, zoom } = camera;
     const gridSize = settings.gridSize;
-    
+
     // 计算可见区域
     const visibleLeft = -position.x / zoom;
     const visibleTop = -position.y / zoom;
     const visibleRight = visibleLeft + width / zoom;
     const visibleBottom = visibleTop + height / zoom;
-    
+
     // 使用工具函数绘制网格
     CanvasUtils.drawGrid(
       ctx,
@@ -116,7 +115,7 @@ const Canvas: React.FC = () => {
       const centerY = top + height / 2;
       const radiusX = width / 2;
       const radiusY = height / 2;
-      
+
       CanvasUtils.drawEllipse(
         ctx,
         centerX,
@@ -195,7 +194,7 @@ const Canvas: React.FC = () => {
   // 渲染函数：绘制选择框
   const drawSelectionRect = useCallback((ctx: CanvasRenderingContext2D, rect: RectType) => {
     const { zoom } = camera;
-    
+
     CanvasUtils.drawSelectionRect(
       ctx,
       rect.x,
@@ -221,32 +220,32 @@ const Canvas: React.FC = () => {
     const devicePixelRatio = window.devicePixelRatio || 1;
     canvas.width = dimensions.width * devicePixelRatio;
     canvas.height = dimensions.height * devicePixelRatio;
-    
+
     // 应用设备像素比缩放
     ctx.scale(devicePixelRatio, devicePixelRatio);
-    
+
     // 清除画布
     CanvasUtils.clearCanvas(ctx, dimensions.width, dimensions.height);
-    
+
     // 保存初始状态
     ctx.save();
-    
+
     // 应用相机变换
     ctx.translate(camera.position.x, camera.position.y);
     ctx.scale(camera.zoom, camera.zoom);
-    
+
     // 计算可见视口区域（世界坐标）
     const visibleLeft = -camera.position.x / camera.zoom;
     const visibleTop = -camera.position.y / camera.zoom;
     const visibleRight = visibleLeft + dimensions.width / camera.zoom;
     const visibleBottom = visibleTop + dimensions.height / camera.zoom;
-    
+
     // 绘制网格
     drawGrid(ctx);
 
     // 获取元素列表
     const items = getItems();
-    
+
     // 获取视口内的元素并按Z轴排序
     const visibleItems = CanvasUtils.getVisibleItems(
       items,
@@ -255,36 +254,36 @@ const Canvas: React.FC = () => {
       visibleRight,
       visibleBottom
     );
-    
+
     const sortedItems = CanvasUtils.sortItemsByZIndex(visibleItems);
-    
+
     // 绘制可见元素
     for (const item of sortedItems) {
       const isSelected = selectedItemIds.has(item.objid);
       const overridePosition = isSelected ? tempPositions.get(item.objid) : undefined;
       drawItem(ctx, item, isSelected, overridePosition);
     }
-    
+
     // 绘制选择框（如果存在）
     if (isSelecting && selectionRect) {
       drawSelectionRect(ctx, selectionRect);
     }
-    
+
     // 恢复初始状态
     ctx.restore();
-    
+
     // 请求下一帧动画
     animationFrameRef.current = requestAnimationFrame(render);
   }, [
-    camera, 
-    dimensions, 
-    drawGrid, 
-    drawItem, 
-    drawSelectionRect, 
-    getItems, 
-    isSelecting, 
-    selectedItemIds, 
-    selectionRect, 
+    camera,
+    dimensions,
+    drawGrid,
+    drawItem,
+    drawSelectionRect,
+    getItems,
+    isSelecting,
+    selectedItemIds,
+    selectionRect,
     tempPositions
   ]);
 
@@ -293,7 +292,7 @@ const Canvas: React.FC = () => {
     if (dimensions.width > 0 && dimensions.height > 0) {
       animationFrameRef.current = requestAnimationFrame(render);
     }
-    
+
     return () => {
       if (animationFrameRef.current !== null) {
         cancelAnimationFrame(animationFrameRef.current);
@@ -308,11 +307,11 @@ const Canvas: React.FC = () => {
 
       const scaleBy = 1.1;
       const oldScale = camera.zoom;
-      
+
       // 获取画布上的鼠标位置
       const rect = canvasRef.current?.getBoundingClientRect();
       if (!rect) return;
-      
+
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
 
@@ -343,7 +342,7 @@ const Canvas: React.FC = () => {
     },
     [camera.position, camera.zoom, updateCamera]
   );
-  
+
   // 检查矩形与元素是否相交
   const rectIntersectsItem = useCallback((rect: RectType, item: CanvasItem): boolean => {
     return CanvasUtils.rectIntersectsItem(rect, item);
@@ -353,7 +352,7 @@ const Canvas: React.FC = () => {
   const findItemAtPosition = useCallback(
     (pos: Point): CanvasItem | undefined => {
       const items = getItems();
-      
+
       // 按z-index反向排序，这样可以先检测顶层元素
       const sortedItems = [...items].sort(
         (a, b) => (b.zIndex || 0) - (a.zIndex || 0)
@@ -371,7 +370,7 @@ const Canvas: React.FC = () => {
       if (!rect) {
         return { x: 0, y: 0 };
       }
-      
+
       return CanvasUtils.clientToWorldPosition(
         clientX,
         clientY,
@@ -386,14 +385,14 @@ const Canvas: React.FC = () => {
   // 处理鼠标按下事件
   const handleMouseDown = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement>) => {
-      // 检查是否按下了右键（用于拖动画布）
+      // 检查是否按下了右键，用于拖动画布
       if (e.button === 2) {
         e.preventDefault();
         e.stopPropagation();
 
         setIsDraggingCanvas(true);
         const pointerPos = { x: e.clientX, y: e.clientY };
-        
+
         setDragStartPos({
           x: pointerPos.x - camera.position.x,
           y: pointerPos.y - camera.position.y
@@ -447,12 +446,12 @@ const Canvas: React.FC = () => {
       }
     },
     [
-      camera.position, 
-      clientToWorldPosition, 
-      findItemAtPosition, 
-      selectItem, 
-      selectedItemIds, 
-      clearSelection, 
+      camera.position,
+      clientToWorldPosition,
+      findItemAtPosition,
+      selectItem,
+      selectedItemIds,
+      clearSelection,
       getItems
     ]
   );
@@ -461,7 +460,7 @@ const Canvas: React.FC = () => {
   const handleMouseMove = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement>) => {
       const pointerPos = { x: e.clientX, y: e.clientY };
-      
+
       if (isDraggingCanvas && dragStartPos) {
         const newPosition = {
           x: pointerPos.x - dragStartPos.x,
@@ -712,11 +711,11 @@ const Canvas: React.FC = () => {
     // 计算画布中心
     const centerX = dimensions.width / 2;
     const centerY = dimensions.height / 2;
-    
+
     // 计算画布中心在世界坐标中的位置
     const worldCenterX = (centerX - camera.position.x) / oldScale;
     const worldCenterY = (centerY - camera.position.y) / oldScale;
-    
+
     // 计算新的相机位置，保持画布中心对准相同的世界坐标
     const newPos = {
       x: centerX - worldCenterX * newScale,
@@ -737,11 +736,11 @@ const Canvas: React.FC = () => {
     // 计算画布中心
     const centerX = dimensions.width / 2;
     const centerY = dimensions.height / 2;
-    
+
     // 计算画布中心在世界坐标中的位置
     const worldCenterX = (centerX - camera.position.x) / oldScale;
     const worldCenterY = (centerY - camera.position.y) / oldScale;
-    
+
     // 计算新的相机位置，保持画布中心对准相同的世界坐标
     const newPos = {
       x: centerX - worldCenterX * newScale,
@@ -761,9 +760,6 @@ const Canvas: React.FC = () => {
     if (isSelecting) return "crosshair";
     return "default";
   }, [isDraggingCanvas, isDraggingItem, isSelecting]);
-
-  // 监控开发环境中的性能
-  const isDev = process.env.NODE_ENV === 'development';
 
   return (
     <div className="flex flex-col h-full w-full">
@@ -804,9 +800,7 @@ const Canvas: React.FC = () => {
 
         {/* 状态指示器 */}
         <CanvasStatusBar />
-        
-        {/* 性能监视器 - 仅在开发环境中显示 */}
-        {isDev && <PerformanceMonitor enabled={true} />}
+
       </div>
     </div>
   );
