@@ -22,7 +22,6 @@ interface CanvasStore {
     showEquipId: boolean;
     showBoxName: boolean;
     gridSize: number;
-    snapToGrid: boolean;
   };
 
   // 相机/视图状态
@@ -39,7 +38,7 @@ interface CanvasStore {
   };
 
   setItems: (items: CanvasItem[]) => void;
-  addItem: (item: CanvasItem) => void;
+  addItem: (item: CanvasItem) => string;
   updateItem: (id: string, updates: Partial<CanvasItem>) => void;
   updateItems: (ids: string[], updates: Partial<CanvasItem>) => void;
   removeItem: (id: string) => void;
@@ -62,7 +61,6 @@ interface CanvasStore {
   getSelectedItems: () => CanvasItem[];
 
   // 元素操作方法
-  addItemFromTemplate: (template: Partial<CanvasItem>) => string;
   deleteItemById: (itemId: string) => void;
   selectItemById: (itemId: string) => void;
   clearSelectionAction: () => void;
@@ -73,9 +71,11 @@ interface CanvasStore {
     direction: "up" | "down" | "left" | "right",
     template: Partial<CanvasItem>
   ) => void;
-  
+
   // 批量操作
-  batchUpdateItems: (updates: { id: string; updates: Partial<CanvasItem> }[]) => void;
+  batchUpdateItems: (
+    updates: { id: string; updates: Partial<CanvasItem> }[]
+  ) => void;
 }
 
 // 初始状态
@@ -101,7 +101,6 @@ const initialState = {
     showEquipId: false,
     showBoxName: false,
     gridSize: 50,
-    snapToGrid: true,
   },
   camera: {
     position: { x: 0, y: 0 },
@@ -132,11 +131,11 @@ export const useCanvasStore = create<CanvasStore>((set, get) => {
     setItems: (items) => {
       // 初始化ID计数器
       initIdCounter(items);
-      
+
       // 清除缓存
       cachedItems = null;
       cachedSelectedItems = null;
-      
+
       set({
         itemsMap: new Map(items.map((item) => [item.objid, item])),
       });
@@ -145,18 +144,23 @@ export const useCanvasStore = create<CanvasStore>((set, get) => {
     // 添加项目
     addItem: (item) => {
       cachedItems = null; // 清除缓存
+      if (item["objid"] && get().itemsMap.has(item["objid"])) {
+        get().updateItem(item["objid"], item);
+        return item["objid"];
+      }
+
+      if (!item["objid"]) {
+        item["objid"] = generateId();
+      }
+
       set((state) => {
         const newMap = new Map(state.itemsMap);
-
-        const safeItem = {
+        newMap.set(item["objid"], {
           ...item,
-          boxLeft: item.boxLeft,
-          boxTop: item.boxTop,
-        };
-
-        newMap.set(safeItem.objid, safeItem);
+        });
         return { itemsMap: newMap };
       });
+      return item["objid"];
     },
 
     // 更新单个项目
@@ -207,7 +211,7 @@ export const useCanvasStore = create<CanvasStore>((set, get) => {
         return { itemsMap: newMap };
       });
     },
-    
+
     // 批量操作多个项目 - 性能优化版
     batchUpdateItems: (itemUpdates) => {
       if (itemUpdates.length === 0) return;
@@ -380,7 +384,7 @@ export const useCanvasStore = create<CanvasStore>((set, get) => {
 
         // 初始化ID计数器
         initIdCounter(data.items);
-        
+
         // 设置项目
         get().setItems(data.items);
 
@@ -444,7 +448,7 @@ export const useCanvasStore = create<CanvasStore>((set, get) => {
 
         // 初始化ID计数器
         initIdCounter(data.items);
-        
+
         // 设置项目
         get().setItems(data.items);
 
@@ -506,29 +510,6 @@ export const useCanvasStore = create<CanvasStore>((set, get) => {
       return cachedSelectedItems;
     },
 
-    // 从模板添加元素
-    addItemFromTemplate: (template) => {
-      // 生成新的ID
-      const objid = generateId();
-
-      const newItem: CanvasItem = {
-        objid,
-        boxLeft: template.boxLeft ?? Math.random() * 500,
-        boxTop: template.boxTop ?? Math.random() * 500,
-        boxWidth: template.boxWidth || 100,
-        boxHeight: template.boxHeight || 100,
-        boxCode: template.boxCode || "",
-        equipId: template.equipId || "",
-        showColor: template.showColor || "#4682B4",
-        boxName: template.boxName || "",
-        locId: template.locId || "",
-        showType: template.showType || "rectangle",
-      };
-
-      get().addItem(newItem);
-      return objid;
-    },
-
     // 删除元素
     deleteItemById: (itemId) => {
       get().removeItem(itemId);
@@ -561,7 +542,7 @@ export const useCanvasStore = create<CanvasStore>((set, get) => {
     },
 
     // 添加相邻元素（快速模式）
-    addAdjacentItem: (sourceItemId, direction, template) => {
+    addAdjacentItem: (sourceItemId, direction) => {
       const { itemsMap } = get();
 
       // 直接从 Map 中获取源元素
@@ -587,12 +568,9 @@ export const useCanvasStore = create<CanvasStore>((set, get) => {
       }
 
       // 创建新元素
-      const newItemId = get().addItemFromTemplate({
-        ...template,
-        boxWidth: sourceItem.boxWidth,
-        boxHeight: sourceItem.boxHeight,
-        showColor: sourceItem.showColor || template.showColor,
-        showType: sourceItem.showType || template.showType,
+      const newItemId = get().addItem({
+        ...sourceItem,
+        objid: generateId(),
         boxLeft: newPosition.x,
         boxTop: newPosition.y,
       });

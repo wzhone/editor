@@ -11,7 +11,6 @@ interface GlobalSettingsProps {
     showEquipId: boolean;
     showBoxName: boolean;
     gridSize: number;
-    snapToGrid: boolean;
   };
   onToggle: (setting: string, value?: boolean) => void;
 }
@@ -33,10 +32,6 @@ const GlobalSettings: React.FC<GlobalSettingsProps> = ({
       <div className="flex items-center space-x-2 justify-between">
         <Label htmlFor="auto-mag">自动吸附</Label>
         <Switch id="auto-mag" checked={settings.autoMag} onCheckedChange={() => onToggle('autoMag')} />
-      </div>
-      <div className="flex items-center space-x-2 justify-between">
-        <Label htmlFor="snap-to-grid">网格吸附</Label>
-        <Switch id="snap-to-grid" checked={settings.snapToGrid} onCheckedChange={() => onToggle('snapToGrid')} />
       </div>
       <div className="flex items-center space-x-2 justify-between">
         <Label htmlFor="show-box-code">显示盒子编码</Label>

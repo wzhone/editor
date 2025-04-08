@@ -90,7 +90,6 @@ export interface SettingsState {
   showEquipId: boolean; // 显示设备ID
   showBoxName: boolean; // 显示盒子名称
   gridSize: number; // 网格大小
-  snapToGrid: boolean; // 吸附到网格
 }
 
 /**

@@ -15,21 +15,18 @@ export const initIdCounter = (items: CanvasItem[]): void => {
     globalCounter = 0;
     return;
   }
-  
+
   // 查找数字ID中的最大值
   let maxId = 0;
-  
+
   for (const item of items) {
     // 尝试从ID中提取数字部分
-    const matches = item.objid.match(/^item-(\d+)$/);
-    if (matches && matches[1]) {
-      const idNum = parseInt(matches[1], 10);
-      if (!isNaN(idNum) && idNum > maxId) {
-        maxId = idNum;
-      }
+    const idNum = parseInt(item.objid, 10);
+    if (!isNaN(idNum) && idNum > maxId) {
+      maxId = idNum;
     }
   }
-  
+
   // 设置全局计数器为最大ID + 1
   globalCounter = maxId + 1;
 };
@@ -40,17 +37,7 @@ export const initIdCounter = (items: CanvasItem[]): void => {
  * @returns 递增的唯一ID字符串
  */
 export const generateId = (): string => {
-  return `item-${globalCounter++}`;
-};
-
-/**
- * 检查ID是否有效
- * @param id 要检查的ID
- * @returns 布尔值，表示ID是否有效
- */
-export const isValidId = (id: string): boolean => {
-  // 匹配格式 "item-数字"
-  return /^item-\d+$/.test(id);
+  return `${globalCounter++}`;
 };
 
 /**

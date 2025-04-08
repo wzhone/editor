@@ -303,10 +303,3 @@ export function worldToClientPosition(
 export function getScaledFontSize(baseFontSize: number, zoom: number): number {
   return baseFontSize / zoom;
 }
-
-/**
- * 吸附到网格
- */
-export function snapToGrid(position: number, gridSize: number): number {
-  return Math.round(position / gridSize) * gridSize;
-}

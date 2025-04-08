@@ -11,7 +11,7 @@ import { Label } from "../ui/label";
  * 用于创建新的画布元素
  */
 const ElementCreator: React.FC = () => {
-  const { templateItem, setTemplateItem, addItemFromTemplate } = useCanvasStore();
+  const { templateItem, setTemplateItem, addItem } = useCanvasStore();
 
   // 更新模板属性
   const handleTemplateChange = (field: string, value: string | number) => {
@@ -43,7 +43,7 @@ const ElementCreator: React.FC = () => {
     };
 
     // 使用修改后的模板添加元素
-    const newItemId = store.addItemFromTemplate(newTemplate);
+    const newItemId = store.addItem(newTemplate);
 
     // 选中新创建的元素
     store.selectItem(newItemId, false);

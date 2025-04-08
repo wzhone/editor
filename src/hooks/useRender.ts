@@ -1,9 +1,9 @@
 // src/hooks/useRender.ts
-import { useCallback, useMemo, useRef } from 'react';
-import { useCanvasStore } from '@/state/store';
-import { CanvasItem, Point, Rect } from '@/types';
-import * as CanvasUtils from '@/utils/canvasUtils';
-import { CameraState } from '@/types';
+import { useCallback, useMemo, useRef, useEffect } from "react";
+import { useCanvasStore } from "@/state/store";
+import { CanvasItem, Point, Rect } from "@/types";
+import * as CanvasUtils from "@/utils/canvasUtils";
+import { CameraState } from "@/types";
 
 interface UseRenderProps {
   canvasRef: React.RefObject<HTMLCanvasElement>;
@@ -14,7 +14,7 @@ interface UseRenderProps {
   selectionRect: Rect | null;
   isDraggingItem: boolean;
   tempPositions: Map<string, { left: number; top: number }>;
-  snapGuides: { horizontal: number[], vertical: number[] };
+  snapGuides: { horizontal: number[]; vertical: number[] };
   visibleViewport: {
     left: number;
     top: number;
@@ -35,17 +35,16 @@ export function useRender({
   isDraggingItem,
   tempPositions,
   snapGuides,
-  visibleViewport
+  visibleViewport,
 }: UseRenderProps) {
   // 动画帧引用
   const animationFrameRef = useRef<number | null>(null);
-  
+
+  // 上次渲染的时间戳，用于优化帧率
+  const lastRenderTimeRef = useRef<number>(0);
+
   // 从Store获取状态
-  const {
-    settings,
-    selectedItemIds,
-    getItems
-  } = useCanvasStore();
+  const { settings, selectedItemIds, getItems, itemsMap } = useCanvasStore();
 
   // 使用记忆化获取可见元素，避免重复计算
   const visibleItems = useMemo(() => {
@@ -57,170 +56,182 @@ export function useRender({
       visibleViewport.right,
       visibleViewport.bottom
     );
-  }, [getItems, visibleViewport]);
+  }, [getItems, visibleViewport, itemsMap]); // 添加 itemsMap 作为依赖项，确保元素更新时重新计算
 
   // 使用记忆化获取选中的元素
   const selectedItems = useMemo(() => {
-    return visibleItems.filter(item => selectedItemIds.has(item.objid));
+    return visibleItems.filter((item) => selectedItemIds.has(item.objid));
   }, [visibleItems, selectedItemIds]);
 
   // 绘制网格
-  const drawGrid = useCallback((ctx: CanvasRenderingContext2D) => {
-    const { gridSize } = settings;
+  const drawGrid = useCallback(
+    (ctx: CanvasRenderingContext2D) => {
+      const { gridSize } = settings;
 
-    // 使用工具函数绘制网格
-    CanvasUtils.drawGrid(
-      ctx,
-      visibleViewport.left,
-      visibleViewport.top,
-      visibleViewport.right,
-      visibleViewport.bottom,
-      gridSize,
-      camera.zoom
-    );
-  }, [camera.zoom, settings.gridSize, visibleViewport]);
+      // 使用工具函数绘制网格
+      CanvasUtils.drawGrid(
+        ctx,
+        visibleViewport.left,
+        visibleViewport.top,
+        visibleViewport.right,
+        visibleViewport.bottom,
+        gridSize,
+        camera.zoom
+      );
+    },
+    [camera.zoom, settings.gridSize, visibleViewport]
+  );
 
   // 绘制单个元素
-  const drawItem = useCallback((
-    ctx: CanvasRenderingContext2D,
-    item: CanvasItem,
-    isSelected: boolean,
-    overridePosition?: { left: number; top: number }
-  ) => {
-    const left = overridePosition ? overridePosition.left : item.boxLeft;
-    const top = overridePosition ? overridePosition.top : item.boxTop;
-    const width = item.boxWidth;
-    const height = item.boxHeight;
-    const { zoom } = camera;
-    const lineWidth = isSelected ? 2 / zoom : 1 / zoom;
-    const strokeStyle = isSelected ? '#0000ff' : '#000000';
+  const drawItem = useCallback(
+    (
+      ctx: CanvasRenderingContext2D,
+      item: CanvasItem,
+      isSelected: boolean,
+      overridePosition?: { left: number; top: number }
+    ) => {
+      const left = overridePosition ? overridePosition.left : item.boxLeft;
+      const top = overridePosition ? overridePosition.top : item.boxTop;
+      const width = item.boxWidth;
+      const height = item.boxHeight;
+      const { zoom } = camera;
+      const lineWidth = isSelected ? 2 / zoom : 1 / zoom;
+      const strokeStyle = isSelected ? "#0000ff" : "#000000";
 
-    // 根据不同类型绘制图形
-    if (item.showType === "ellipse") {
-      const centerX = left + width / 2;
-      const centerY = top + height / 2;
-      const radiusX = width / 2;
-      const radiusY = height / 2;
+      // 根据不同类型绘制图形
+      if (item.showType === "ellipse") {
+        const centerX = left + width / 2;
+        const centerY = top + height / 2;
+        const radiusX = width / 2;
+        const radiusY = height / 2;
 
-      CanvasUtils.drawEllipse(
-        ctx,
-        centerX,
-        centerY,
-        radiusX,
-        radiusY,
-        item.showColor,
-        strokeStyle,
-        lineWidth
-      );
-    } else {
-      // 默认为矩形
-      CanvasUtils.drawRect(
-        ctx,
-        left,
-        top,
-        width,
-        height,
-        item.showColor,
-        strokeStyle,
-        lineWidth
-      );
-    }
-
-    // 绘制标签文本
-    const numLabels = [
-      settings.showBoxCode && item.boxCode,
-      settings.showEquipId && item.equipId,
-      settings.showBoxName && item.boxName
-    ].filter(Boolean).length;
-
-    if (numLabels > 0) {
-      const spacing = item.boxHeight / (numLabels + 1);
-      let positionIndex = 0;
-      const fontSize = CanvasUtils.getScaledFontSize(12, zoom);
-      ctx.fillStyle = '#000000';
-
-      if (settings.showBoxCode && item.boxCode) {
-        positionIndex++;
-        CanvasUtils.drawCenteredText(
+        CanvasUtils.drawEllipse(
           ctx,
-          item.boxCode,
-          left + width / 2,
-          top + spacing * positionIndex,
+          centerX,
+          centerY,
+          radiusX,
+          radiusY,
+          item.showColor,
+          strokeStyle,
+          lineWidth
+        );
+      } else {
+        // 默认为矩形
+        CanvasUtils.drawRect(
+          ctx,
+          left,
+          top,
           width,
-          fontSize
+          height,
+          item.showColor,
+          strokeStyle,
+          lineWidth
         );
       }
 
-      if (settings.showEquipId && item.equipId) {
-        positionIndex++;
-        CanvasUtils.drawCenteredText(
-          ctx,
-          item.equipId,
-          left + width / 2,
-          top + spacing * positionIndex,
-          width,
-          fontSize
-        );
-      }
+      // 绘制标签文本
+      const numLabels = [
+        settings.showBoxCode && item.boxCode,
+        settings.showEquipId && item.equipId,
+        settings.showBoxName && item.boxName,
+      ].filter(Boolean).length;
 
-      if (settings.showBoxName && item.boxName) {
-        positionIndex++;
-        CanvasUtils.drawCenteredText(
-          ctx,
-          item.boxName,
-          left + width / 2,
-          top + spacing * positionIndex,
-          width,
-          fontSize
-        );
+      if (numLabels > 0) {
+        const spacing = item.boxHeight / (numLabels + 1);
+        let positionIndex = 0;
+        const fontSize = CanvasUtils.getScaledFontSize(12, zoom);
+        ctx.fillStyle = "#000000";
+
+        if (settings.showBoxCode && item.boxCode) {
+          positionIndex++;
+          CanvasUtils.drawCenteredText(
+            ctx,
+            item.boxCode,
+            left + width / 2,
+            top + spacing * positionIndex,
+            width,
+            fontSize
+          );
+        }
+
+        if (settings.showEquipId && item.equipId) {
+          positionIndex++;
+          CanvasUtils.drawCenteredText(
+            ctx,
+            item.equipId,
+            left + width / 2,
+            top + spacing * positionIndex,
+            width,
+            fontSize
+          );
+        }
+
+        if (settings.showBoxName && item.boxName) {
+          positionIndex++;
+          CanvasUtils.drawCenteredText(
+            ctx,
+            item.boxName,
+            left + width / 2,
+            top + spacing * positionIndex,
+            width,
+            fontSize
+          );
+        }
       }
-    }
-  }, [camera, settings]);
+    },
+    [camera, settings]
+  );
 
   // 绘制选择框
-  const drawSelectionRect = useCallback((ctx: CanvasRenderingContext2D, rect: Rect) => {
-    const { zoom } = camera;
+  const drawSelectionRect = useCallback(
+    (ctx: CanvasRenderingContext2D, rect: Rect) => {
+      const { zoom } = camera;
 
-    CanvasUtils.drawSelectionRect(
-      ctx,
-      rect.x,
-      rect.y,
-      rect.width,
-      rect.height,
-      '#0066cc',
-      'rgba(0, 102, 204, 0.1)',
-      1 / zoom,
-      [5 / zoom, 5 / zoom]
-    );
-  }, [camera]);
+      CanvasUtils.drawSelectionRect(
+        ctx,
+        rect.x,
+        rect.y,
+        rect.width,
+        rect.height,
+        "#0066cc",
+        "rgba(0, 102, 204, 0.1)",
+        1 / zoom,
+        [5 / zoom, 5 / zoom]
+      );
+    },
+    [camera]
+  );
 
   // 绘制自动吸附指引线
-  const drawSnapGuides = useCallback((ctx: CanvasRenderingContext2D) => {
-    const { zoom } = camera;
+  const drawSnapGuides = useCallback(
+    (ctx: CanvasRenderingContext2D) => {
+      const { zoom } = camera;
 
-    ctx.strokeStyle = '#FF0000';
-    ctx.lineWidth = 1 / zoom;
-    ctx.setLineDash([5 / zoom, 5 / zoom]);
+      ctx.strokeStyle = "#FF0000";
+      ctx.lineWidth = 1 / zoom;
+      ctx.setLineDash([5 / zoom, 5 / zoom]);
 
-    // 绘制水平指引线
-    snapGuides.horizontal.forEach(y => {
-      ctx.beginPath();
-      ctx.moveTo(visibleViewport.left, y);
-      ctx.lineTo(visibleViewport.right, y);
-      ctx.stroke();
-    });
+      // 绘制水平指引线
+      snapGuides.horizontal.forEach((y) => {
+        ctx.beginPath();
+        ctx.moveTo(visibleViewport.left, y);
+        ctx.lineTo(visibleViewport.right, y);
+        ctx.stroke();
+      });
 
-    // 绘制垂直指引线
-    snapGuides.vertical.forEach(x => {
-      ctx.beginPath();
-      ctx.moveTo(x, visibleViewport.top);
-      ctx.lineTo(x, visibleViewport.bottom);
-      ctx.stroke();
-    });
+      // 绘制垂直指引线
+      snapGuides.vertical.forEach((x) => {
+        ctx.beginPath();
+        ctx.moveTo(x, visibleViewport.top);
+        ctx.lineTo(x, visibleViewport.bottom);
+        ctx.stroke();
+      });
 
-    // 重置线型
-    ctx.setLineDash([]);
-  }, [camera, snapGuides, visibleViewport]);
+      // 重置线型
+      ctx.setLineDash([]);
+    },
+    [camera, snapGuides, visibleViewport]
+  );
 
   // 主渲染函数
   const render = useCallback(() => {
@@ -230,7 +241,7 @@ export function useRender({
     if (!canvas || !offscreenCanvas) return;
 
     // 获取离屏上下文
-    const offCtx = offscreenCanvas.getContext('2d');
+    const offCtx = offscreenCanvas.getContext("2d");
     if (!offCtx) return;
 
     // 获取设备像素比
@@ -260,7 +271,9 @@ export function useRender({
     // 绘制可见元素
     for (const item of sortedItems) {
       const isSelected = selectedItemIds.has(item.objid);
-      const overridePosition = isSelected ? tempPositions.get(item.objid) : undefined;
+      const overridePosition = isSelected
+        ? tempPositions.get(item.objid)
+        : undefined;
       drawItem(offCtx, item, isSelected, overridePosition);
     }
 
@@ -270,7 +283,11 @@ export function useRender({
     }
 
     // 绘制吸附指引线（如果启用自动吸附且有元素在拖动）
-    if (settings.autoMag && isDraggingItem && snapGuides.horizontal.length + snapGuides.vertical.length > 0) {
+    if (
+      settings.autoMag &&
+      isDraggingItem &&
+      snapGuides.horizontal.length + snapGuides.vertical.length > 0
+    ) {
       drawSnapGuides(offCtx);
     }
 
@@ -278,7 +295,7 @@ export function useRender({
     offCtx.restore();
 
     // 将离屏画布内容复制到可见画布
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (ctx) {
       // 清除可见画布
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -286,10 +303,19 @@ export function useRender({
       // 将离屏画布内容绘制到可见画布
       ctx.drawImage(
         offscreenCanvas,
-        0, 0, offscreenCanvas.width, offscreenCanvas.height,
-        0, 0, canvas.width, canvas.height
+        0,
+        0,
+        offscreenCanvas.width,
+        offscreenCanvas.height,
+        0,
+        0,
+        canvas.width,
+        canvas.height
       );
     }
+
+    // 更新上次渲染时间
+    lastRenderTimeRef.current = performance.now();
 
     // 请求下一帧动画
     animationFrameRef.current = requestAnimationFrame(render);
@@ -303,13 +329,12 @@ export function useRender({
     isDraggingItem,
     selectedItemIds,
     selectionRect,
-    settings.autoMag,
-    settings.gridSize,
+    settings,
     snapGuides,
     tempPositions,
     visibleItems,
     canvasRef,
-    offscreenCanvasRef
+    offscreenCanvasRef,
   ]);
 
   // 启动和停止渲染循环
@@ -328,12 +353,27 @@ export function useRender({
     }
   }, []);
 
+  // 添加 itemsMap 监听，确保元素更新时重新渲染
+  useEffect(() => {
+    // 我们需要监听 store 中 itemsMap 的变化
+    const unsubscribe = useCanvasStore.subscribe(() => {
+      // 当 itemsMap 变化时，确保重新渲染
+      if (animationFrameRef.current === null) {
+        startRendering();
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [startRendering]);
+
   return {
     render,
     startRendering,
     stopRendering,
     visibleItems,
     selectedItems,
-    animationFrameRef
+    animationFrameRef,
   };
 }

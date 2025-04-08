@@ -15,7 +15,7 @@ interface UseDragAndDropProps {
 
 export function useDragAndDrop({ clientToWorldPosition, camera }: UseDragAndDropProps) {
   // 从Store获取方法
-  const { addItemFromTemplate, selectItem } = useCanvasStore();
+  const { addItem, selectItem } = useCanvasStore();
   
   // 拖动状态
   const [isDragOver, setIsDragOver] = useState(false);
@@ -159,7 +159,7 @@ export function useDragAndDrop({ clientToWorldPosition, camera }: UseDragAndDrop
       };
       
       // 添加元素并获取ID
-      const newItemId = addItemFromTemplate(newItem);
+      const newItemId = addItem(newItem);
       
       // 选中新创建的元素
       selectItem(newItemId, false);
@@ -177,7 +177,7 @@ export function useDragAndDrop({ clientToWorldPosition, camera }: UseDragAndDrop
       dragStartPositionRef.current = null;
       dragDataRef.current = null;
     }
-  }, [clientToWorldPosition, addItemFromTemplate, selectItem, getElementData]);
+  }, [clientToWorldPosition, addItem, selectItem, getElementData]);
 
   // 渲染预览元素的样式
   const getPreviewStyle = useCallback(() => {

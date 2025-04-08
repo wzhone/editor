@@ -26,56 +26,24 @@ const DraggableElementCreator: React.FC = () => {
   // 预定义的元素模板
   const elementTemplates: ElementTemplate[] = [
     {
-      id: 'rect-small',
-      name: '小矩形',
+      id: 'rect',
+      name: '矩形',
       boxWidth: 20,
       boxHeight: 20,
       showType: 'rectangle',
-      showColor: '#4682B4'
+      showColor: '#ffffff'
     },
     {
-      id: 'rect-medium',
-      name: '中矩形',
-      boxWidth: 40,
-      boxHeight: 30,
-      showType: 'rectangle',
-      showColor: '#2E8B57'
-    },
-    {
-      id: 'rect-large',
-      name: '大矩形',
-      boxWidth: 60,
-      boxHeight: 40,
-      showType: 'rectangle',
-      showColor: '#B22222'
-    },
-    {
-      id: 'ellipse-small',
-      name: '小椭圆',
+      id: 'ellipse',
+      name: '圆形',
       boxWidth: 20,
       boxHeight: 20,
       showType: 'ellipse',
-      showColor: '#9932CC'
-    },
-    {
-      id: 'ellipse-medium',
-      name: '中椭圆',
-      boxWidth: 40,
-      boxHeight: 30,
-      showType: 'ellipse',
-      showColor: '#FF8C00'
-    },
-    {
-      id: 'ellipse-large',
-      name: '大椭圆',
-      boxWidth: 60,
-      boxHeight: 40,
-      showType: 'ellipse',
-      showColor: '#20B2AA'
+      showColor: '#ffffff'
     }
   ];
 
-  // 处理拖拽开始事件 - 改进版
+  // 处理拖拽开始事件
   const handleDragStart = (e: React.DragEvent, template: ElementTemplate) => {
     // 设置拖拽数据
     const templateData = {
@@ -85,10 +53,10 @@ const DraggableElementCreator: React.FC = () => {
       boxName: templateItem.boxName || '',
       locId: templateItem.locId || ''
     };
-    
+
     e.dataTransfer.setData('application/json', JSON.stringify(templateData));
     e.dataTransfer.effectAllowed = 'copy';
-    
+
     // 创建自定义拖拽图像
     const dragPreview = document.createElement('div');
     dragPreview.style.width = `${template.boxWidth}px`;
@@ -101,10 +69,10 @@ const DraggableElementCreator: React.FC = () => {
     dragPreview.style.pointerEvents = 'none';
     dragPreview.style.zIndex = '1000';
     document.body.appendChild(dragPreview);
-    
+
     // 设置拖拽图像
     e.dataTransfer.setDragImage(dragPreview, template.boxWidth / 2, template.boxHeight / 2);
-    
+
     // 延迟删除拖拽图像
     setTimeout(() => {
       document.body.removeChild(dragPreview);
@@ -125,8 +93,6 @@ const DraggableElementCreator: React.FC = () => {
   // 渲染元素模板
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-medium mb-2">拖拽元素到画布</h3>
-
       <div className="grid grid-cols-3 gap-2">
         {elementTemplates.map((template) => (
           <div
@@ -134,11 +100,11 @@ const DraggableElementCreator: React.FC = () => {
             draggable
             onDragStart={(e) => handleDragStart(e, template)}
             onClick={() => selectTemplate(template)}
-            className="flex flex-col items-center justify-center p-2 border rounded cursor-grab hover:bg-gray-50 transition-colors"
+            className="flex flex-col items-center justify-center p-2 border border-gray-500 border-dashed rounded cursor-grab hover:bg-gray-50 transition-colors"
             title={`拖拽 ${template.name} 到画布`}
           >
             <div
-              className={`w-8 h-8 mb-1 border ${template.showType === 'ellipse' ? 'rounded-full' : 'rounded'}`}
+              className={`w-8 h-8 mb-1 border border-black ${template.showType === 'ellipse' ? 'rounded-full' : 'rounded-sm'}`}
               style={{ backgroundColor: template.showColor }}
             />
             <span className="text-xs">{template.name}</span>
@@ -146,11 +112,10 @@ const DraggableElementCreator: React.FC = () => {
         ))}
       </div>
 
-      <div className="mt-3 pt-3 border-t">
-        <h3 className="text-sm font-medium mb-2">通用属性</h3>
-        <div className="space-y-2">
+      <div className="mt-3 pt-3">
+        <div className="space-y-2 grid grid-cols-2 gap-2">
           <div>
-            <label className="block text-xs mb-1">盒子编码</label>
+            <label className="block text-xs mb-1">Box Code</label>
             <input
               type="text"
               value={templateItem.boxCode || ''}
@@ -164,7 +129,7 @@ const DraggableElementCreator: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs mb-1">设备ID</label>
+            <label className="block text-xs mb-1">Equip ID</label>
             <input
               type="text"
               value={templateItem.equipId || ''}
@@ -178,7 +143,7 @@ const DraggableElementCreator: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs mb-1">盒子名称</label>
+            <label className="block text-xs mb-1">Box Name</label>
             <input
               type="text"
               value={templateItem.boxName || ''}
@@ -192,7 +157,7 @@ const DraggableElementCreator: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs mb-1">位置ID</label>
+            <label className="block text-xs mb-1">Loc ID</label>
             <input
               type="text"
               value={templateItem.locId || ''}
@@ -205,10 +170,6 @@ const DraggableElementCreator: React.FC = () => {
             />
           </div>
         </div>
-      </div>
-
-      <div className="text-xs text-gray-500 mt-2">
-        拖拽元素到画布或点击选择作为模板
       </div>
     </div>
   );

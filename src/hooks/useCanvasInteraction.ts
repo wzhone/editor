@@ -164,7 +164,6 @@ export function useCanvasInteraction({
           tempItem,
           visibleItems,
           selectedItemIds,
-          settings.snapToGrid ? settings.gridSize : null,
           visibleViewport,
           10 // 吸附阈值
         );
@@ -219,7 +218,6 @@ export function useCanvasInteraction({
       selectedItemIds,
       itemStartPositions,
       settings.autoMag,
-      settings.snapToGrid,
       settings.gridSize,
       visibleItems,
       visibleViewport,

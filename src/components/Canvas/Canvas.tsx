@@ -10,7 +10,7 @@ import { useCanvas } from '@/hooks/useCanvas';
  * 使用自定义Hook分离逻辑
  */
 const Canvas: React.FC = () => {
-  const { 
+  const {
     canvasRef,
     containerRef,
     dimensions,
@@ -37,7 +37,7 @@ const Canvas: React.FC = () => {
   // 记录性能
   useEffect(() => {
     const now = performance.now();
-    
+
     return () => {
       // 组件卸载时计算渲染时间
       const renderTime = performance.now() - now;
@@ -94,16 +94,16 @@ const Canvas: React.FC = () => {
 
         {/* 仅当没有预览元素时显示拖拽提示遮罩 */}
         {isDragOver && !previewItem && (
-          <div className="absolute inset-0 border-2 border-dashed border-blue-500 bg-blue-100 bg-opacity-20 pointer-events-none flex items-center justify-center">
+          <div className="absolute inset-0 border-2 border-dashed border-blue-500 bg-blue-100/20  pointer-events-none flex items-center justify-center">
             <div className="bg-white px-4 py-2 rounded shadow">
               拖放到此处创建元素
             </div>
           </div>
         )}
-        
+
         {/* 拖拽预览元素 */}
         {isDragOver && previewItem && previewPosition && previewStyle && (
-          <div 
+          <div
             className="absolute pointer-events-none"
             style={previewStyle}
           />

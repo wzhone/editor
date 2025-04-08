@@ -35,12 +35,6 @@ export function useKeyEvents({
         let newLeft = item.boxLeft + dx;
         let newTop = item.boxTop + dy;
 
-        // 如果启用网格吸附，对齐到网格
-        if (settings.snapToGrid && settings.gridSize > 0) {
-          newLeft = Math.round(newLeft / settings.gridSize) * settings.gridSize;
-          newTop = Math.round(newTop / settings.gridSize) * settings.gridSize;
-        }
-
         itemUpdates.push({
           id,
           updates: {

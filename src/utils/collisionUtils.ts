@@ -123,7 +123,6 @@ export function calculateSnappedPosition(
   item: CanvasItem,
   allItems: CanvasItem[],
   selectedItemIds: Set<string>,
-  gridSize: number | null,
   viewportBounds: { left: number; top: number; right: number; bottom: number },
   threshold: number = 10
 ): { boxLeft: number; boxTop: number } {
@@ -179,20 +178,6 @@ export function calculateSnappedPosition(
     // 特殊吸附点 - 上对下、下对上
     verticalSnapPoints.push(otherEdges.top - item.boxHeight);
     verticalSnapPoints.push(otherEdges.bottom);
-  }
-
-  // 添加网格吸附点（如果启用）
-  if (gridSize && gridSize > 0) {
-    const gridPoints = getGridSnapPoints(
-      gridSize,
-      viewportBounds.left,
-      viewportBounds.top,
-      viewportBounds.right,
-      viewportBounds.bottom
-    );
-
-    horizontalSnapPoints.push(...gridPoints.horizontal);
-    verticalSnapPoints.push(...gridPoints.vertical);
   }
 
   // 查找最近的水平吸附点

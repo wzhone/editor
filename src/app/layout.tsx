@@ -16,7 +16,7 @@ export default function VisualLayoutEditorApp({ children }: { children: React.Re
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </head>
       <body>
-        <Toaster position="top-right" expand={true} richColors />
+        <Toaster position="top-right" expand={true} richColors duration={900} />
         {children}
       </body>
     </html>
