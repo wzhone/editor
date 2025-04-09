@@ -106,44 +106,7 @@ export function clearCanvas(
   ctx.clearRect(0, 0, width, height);
 }
 
-/**
- * 绘制网格
- */
-export function drawGrid(
-  ctx: CanvasRenderingContext2D,
-  viewportLeft: number,
-  viewportTop: number,
-  viewportRight: number,
-  viewportBottom: number,
-  gridSize: number,
-  zoom: number,
-  color: string = "#aaaaaa",
-  opacity: number = 0.2
-): void {
-  // 计算网格起始位置（对齐到网格）
-  const startX = Math.floor(viewportLeft / gridSize) * gridSize;
-  const startY = Math.floor(viewportTop / gridSize) * gridSize;
 
-  ctx.strokeStyle = color;
-  ctx.globalAlpha = opacity;
-  ctx.lineWidth = 1 / zoom;
-  ctx.beginPath();
-
-  // 绘制垂直线
-  for (let x = startX; x <= viewportRight; x += gridSize) {
-    ctx.moveTo(x, viewportTop);
-    ctx.lineTo(x, viewportBottom);
-  }
-
-  // 绘制水平线
-  for (let y = startY; y <= viewportBottom; y += gridSize) {
-    ctx.moveTo(viewportLeft, y);
-    ctx.lineTo(viewportRight, y);
-  }
-
-  ctx.stroke();
-  ctx.globalAlpha = 1.0;
-}
 
 /**
  * 绘制矩形

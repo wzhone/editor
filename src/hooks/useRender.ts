@@ -4,6 +4,7 @@ import { useCanvasStore } from "@/state/store";
 import { CanvasItem, Rect } from "@/types";
 import * as CanvasUtils from "@/utils/canvasUtils";
 import { CameraState } from "@/types";
+import useGrid from "./useGrid";
 
 interface UseRenderProps {
   canvasRef: React.RefObject<HTMLCanvasElement>;
@@ -60,31 +61,25 @@ export function useRender({
   }, [visibleItems, selectedItemIds]);
 
   // 绘制网格
+  const drawGridCallback = useGrid();
+
   const drawGrid = useCallback(
     (ctx: CanvasRenderingContext2D) => {
-      const { gridSize } = settings;
-
-      // 使用工具函数绘制网格
-      CanvasUtils.drawGrid(
+      drawGridCallback(
         ctx,
         visibleViewport.left,
         visibleViewport.top,
         visibleViewport.right,
         visibleViewport.bottom,
-        gridSize,
         camera.zoom
       );
     },
-    [camera.zoom, settings.gridSize, visibleViewport]
+    [camera.zoom, drawGridCallback, visibleViewport]
   );
 
   // 绘制单个元素
   const drawItem = useCallback(
-    (
-      ctx: CanvasRenderingContext2D,
-      item: CanvasItem,
-      isSelected: boolean
-    ) => {
+    (ctx: CanvasRenderingContext2D, item: CanvasItem, isSelected: boolean) => {
       const left = item.boxLeft;
       const top = item.boxTop;
       const width = item.boxWidth;
@@ -224,10 +219,8 @@ export function useRender({
     offCtx.translate(camera.position.x, camera.position.y);
     offCtx.scale(camera.zoom, camera.zoom);
 
-    // 绘制网格
-    if (settings.gridSize > 0) {
-      drawGrid(offCtx);
-    }
+    // 绘制背景网格
+    drawGrid(offCtx);
 
     // 逆序绘制，以配合点击查找逻辑
     const sortedItems = [...visibleItems].reverse();

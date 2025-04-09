@@ -168,10 +168,6 @@ export function useKeyEvents({
     };
   }, [handleKeyDown]);
 
-  useEffect(() => {
-    console.log("1111111111111111111")
-  }, []);
-
   return {
     moveSelectedItems,
   };

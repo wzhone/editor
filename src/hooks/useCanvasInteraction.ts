@@ -218,8 +218,6 @@ export function useCanvasInteraction({
       visibleViewport,
     ]
   );
-
-  // 处理调整大小开始
   const handleResizeStart = useCallback(
     (e: React.MouseEvent, position: ResizeHandlePosition) => {
       e.preventDefault();
@@ -257,7 +255,7 @@ export function useCanvasInteraction({
     [clientToWorldPosition]
   );
 
-  // 处理调整大小过程
+  // 修改 handleResizeMove 函数，确保事件参数类型正确
   const handleResizeMove = useCallback(
     (e: MouseEvent) => {
       if (
@@ -358,17 +356,21 @@ export function useCanvasInteraction({
     ]
   );
 
-  // 处理调整大小结束
-  const handleResizeEnd = useCallback(() => {
-    setIsResizing(false);
-    setResizeHandle(null);
-    setResizeItemOriginal(null);
-    setDragStartPoint(null);
+  // 修改 handleResizeEnd 函数，确保正确清除事件监听器
+  const handleResizeEnd = useCallback(
+    (e: MouseEvent) => {
+      // 移除全局鼠标事件
+      document.removeEventListener("mousemove", handleResizeMove);
+      document.removeEventListener("mouseup", handleResizeEnd);
 
-    // 移除全局鼠标事件
-    document.removeEventListener("mousemove", handleResizeMove);
-    document.removeEventListener("mouseup", handleResizeEnd);
-  }, []);
+      // 重置状态
+      setIsResizing(false);
+      setResizeHandle(null);
+      setResizeItemOriginal(null);
+      setDragStartPoint(null);
+    },
+    [handleResizeMove]
+  );
 
   // 处理鼠标按下事件
   const handleMouseDown = useCallback(
