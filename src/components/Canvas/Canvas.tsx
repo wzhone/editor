@@ -15,6 +15,8 @@ const Canvas: React.FC = () => {
     dimensions,
     camera,
     isDragOver,
+    isSelecting,    // 确保接收此状态
+    selectionRect,  // 确保接收此状态
     previewItem,
     previewPosition,
     handleMouseDown,
@@ -98,11 +100,16 @@ const Canvas: React.FC = () => {
           </div>
         )}
 
-        {/* 拖拽预览元素 */}
-        {isDragOver && previewItem && previewPosition && previewStyle && (
+        {/* 添加框选矩形显示 - 关键修复部分 */}
+        {isSelecting && selectionRect && (
           <div
-            className="absolute pointer-events-none"
-            style={previewStyle}
+            className="absolute border-2 border-blue-500 bg-blue-100/20 pointer-events-none"
+            style={{
+              left: selectionRect.x * camera.zoom + camera.position.x,
+              top: selectionRect.y * camera.zoom + camera.position.y,
+              width: selectionRect.width * camera.zoom,
+              height: selectionRect.height * camera.zoom
+            }}
           />
         )}
       </div>
