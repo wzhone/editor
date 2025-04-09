@@ -2,9 +2,7 @@ import { useState, useCallback } from "react";
 import { useCanvasStore } from "@/state/store";
 import { Point, Rect, CanvasItem } from "@/types";
 import * as CanvasUtils from "@/utils/canvasUtils";
-import {
-  calculateSnappedPosition,
-} from "@/utils/collisionUtils";
+import { calculateSnappedPosition } from "@/utils/collisionUtils";
 
 interface UseCanvasInteractionProps {
   clientToWorldPosition: (clientX: number, clientY: number) => Point;
@@ -18,6 +16,8 @@ interface UseCanvasInteractionProps {
     height: number;
   };
 }
+
+type ResizeHandlePosition = "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w";
 
 export function useCanvasInteraction({
   clientToWorldPosition,
@@ -46,6 +46,16 @@ export function useCanvasInteraction({
     Map<string, { left: number; top: number }>
   >(new Map());
 
+  // 调整大小相关状态
+  const [isResizing, setIsResizing] = useState(false);
+  const [resizeHandle, setResizeHandle] = useState<ResizeHandlePosition | null>(
+    null
+  );
+  const [resizeItemOriginal, setResizeItemOriginal] = useState<{
+    item: CanvasItem;
+    rect: { left: number; top: number; width: number; height: number };
+  } | null>(null);
+
   // 查找指定位置的元素
   const findItemAtPosition = useCallback(
     (pos: Point): CanvasItem | undefined => {
@@ -53,7 +63,7 @@ export function useCanvasInteraction({
       const tolerance = 2 / camera.zoom; // 根据缩放级别动态调整点击容差
 
       // 按z-index反向排序，优先检测顶层元素
-      const sortedItems = [...visibleItems]
+      const sortedItems = [...visibleItems];
 
       // 添加容差的检测区域
       const checkRect = {
@@ -158,7 +168,6 @@ export function useCanvasInteraction({
 
         // 如果发生了吸附，更新所有选中元素的位置
         if (snapDx !== 0 || snapDy !== 0) {
-
           // 更新所有元素位置
           for (const { id, newLeft, newTop } of newPositionsArray) {
             itemUpdates.push({
@@ -210,9 +219,163 @@ export function useCanvasInteraction({
     ]
   );
 
+  // 处理调整大小开始
+  const handleResizeStart = useCallback(
+    (e: React.MouseEvent, position: ResizeHandlePosition) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // 获取选中的元素 (应该只有一个)
+      const selectedItems = useCanvasStore.getState().getSelectedItems();
+      if (selectedItems.length !== 1) return;
+
+      const item = selectedItems[0];
+
+      // 记录调整开始时的原始位置和尺寸
+      setResizeItemOriginal({
+        item,
+        rect: {
+          left: item.boxLeft,
+          top: item.boxTop,
+          width: item.boxWidth,
+          height: item.boxHeight,
+        },
+      });
+
+      // 设置正在调整大小状态
+      setIsResizing(true);
+      setResizeHandle(position);
+
+      // 记录起始点
+      const worldPos = clientToWorldPosition(e.clientX, e.clientY);
+      setDragStartPoint(worldPos);
+
+      // 添加全局鼠标事件，以便可以在画布外拖动
+      document.addEventListener("mousemove", handleResizeMove);
+      document.addEventListener("mouseup", handleResizeEnd);
+    },
+    [clientToWorldPosition]
+  );
+
+  // 处理调整大小过程
+  const handleResizeMove = useCallback(
+    (e: MouseEvent) => {
+      if (
+        !isResizing ||
+        !dragStartPoint ||
+        !resizeHandle ||
+        !resizeItemOriginal
+      )
+        return;
+
+      // 获取当前鼠标位置
+      const worldPos = clientToWorldPosition(e.clientX, e.clientY);
+
+      // 计算拖动的距离
+      const dx = worldPos.x - dragStartPoint.x;
+      const dy = worldPos.y - dragStartPoint.y;
+
+      // 获取原始矩形
+      const original = resizeItemOriginal.rect;
+
+      // 根据不同的控制点位置计算新的位置和尺寸
+      let newLeft = original.left;
+      let newTop = original.top;
+      let newWidth = original.width;
+      let newHeight = original.height;
+
+      // 处理不同位置控制点的调整逻辑
+      switch (resizeHandle) {
+        case "nw": // 左上
+          newLeft = original.left + dx;
+          newTop = original.top + dy;
+          newWidth = original.width - dx;
+          newHeight = original.height - dy;
+          break;
+        case "n": // 上中
+          newTop = original.top + dy;
+          newHeight = original.height - dy;
+          break;
+        case "ne": // 右上
+          newTop = original.top + dy;
+          newWidth = original.width + dx;
+          newHeight = original.height - dy;
+          break;
+        case "e": // 右中
+          newWidth = original.width + dx;
+          break;
+        case "se": // 右下
+          newWidth = original.width + dx;
+          newHeight = original.height + dy;
+          break;
+        case "s": // 下中
+          newHeight = original.height + dy;
+          break;
+        case "sw": // 左下
+          newLeft = original.left + dx;
+          newWidth = original.width - dx;
+          newHeight = original.height + dy;
+          break;
+        case "w": // 左中
+          newLeft = original.left + dx;
+          newWidth = original.width - dx;
+          break;
+      }
+
+      // 确保尺寸不小于最小值
+      const minSize = 10;
+      if (newWidth < minSize) {
+        // 如果宽度太小，调整left保持右边不变
+        if (["nw", "w", "sw"].includes(resizeHandle)) {
+          newLeft = original.left + original.width - minSize;
+        }
+        newWidth = minSize;
+      }
+
+      if (newHeight < minSize) {
+        // 如果高度太小，调整top保持底边不变
+        if (["nw", "n", "ne"].includes(resizeHandle)) {
+          newTop = original.top + original.height - minSize;
+        }
+        newHeight = minSize;
+      }
+
+      // 更新元素属性
+      const store = useCanvasStore.getState();
+      store.updateItem(resizeItemOriginal.item.objid, {
+        boxLeft: newLeft,
+        boxTop: newTop,
+        boxWidth: newWidth,
+        boxHeight: newHeight,
+      });
+    },
+    [
+      isResizing,
+      dragStartPoint,
+      resizeHandle,
+      resizeItemOriginal,
+      clientToWorldPosition,
+    ]
+  );
+
+  // 处理调整大小结束
+  const handleResizeEnd = useCallback(() => {
+    setIsResizing(false);
+    setResizeHandle(null);
+    setResizeItemOriginal(null);
+    setDragStartPoint(null);
+
+    // 移除全局鼠标事件
+    document.removeEventListener("mousemove", handleResizeMove);
+    document.removeEventListener("mouseup", handleResizeEnd);
+  }, []);
+
   // 处理鼠标按下事件
   const handleMouseDown = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement>) => {
+      // 如果正在调整大小，不处理画布的鼠标按下事件
+      if (isResizing) return;
+
       // 如果是右键，用于拖动画布
       if (e.button === 2) {
         e.preventDefault();
@@ -324,6 +487,7 @@ export function useCanvasInteraction({
       }
     },
     [
+      isResizing,
       isDraggingCanvas,
       dragStartPos,
       camera.position,
@@ -339,6 +503,8 @@ export function useCanvasInteraction({
 
   // 处理鼠标抬起事件
   const handleMouseUp = useCallback(() => {
+    if (isResizing) return;
+
     // 处理画布拖动结束
     if (isDraggingCanvas) {
       setIsDraggingCanvas(false);
@@ -375,6 +541,7 @@ export function useCanvasInteraction({
     selectionRect,
     visibleItems,
     selectItems,
+    isResizing,
   ]);
 
   // 防止右键菜单
@@ -430,6 +597,12 @@ export function useCanvasInteraction({
     isDraggingItem,
     isSelecting,
     selectionRect,
+    isResizing,
+    resizeHandle: {
+      handleResizeStart,
+      handleResizeMove,
+      handleResizeEnd,
+    },
     handleMouseDown,
     handleMouseMove,
     handleMouseUp,

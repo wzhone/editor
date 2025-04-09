@@ -80,6 +80,8 @@ export function useCanvas() {
     isDraggingItem,
     isSelecting,
     selectionRect,
+    isResizing,
+    resizeHandle,
     handleMouseDown,
     handleMouseMove,
     handleMouseUp,
@@ -256,6 +258,8 @@ export function useCanvas() {
     isDragOver,
     previewItem,
     previewPosition,
+    isResizing,
+    resizeHandle,
     
     // 事件处理
     handleMouseDown,
