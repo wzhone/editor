@@ -1,6 +1,6 @@
 // src/hooks/useDragAndDrop.ts 的优化版本
 
-import { useCallback, useState, useRef, useEffect } from 'react';
+import { useCallback, useState, useRef } from 'react';
 import { useCanvasStore } from '@/state/store';
 import { CanvasItem, Point } from '@/types';
 import { toast } from 'sonner';
@@ -62,6 +62,7 @@ export function useDragAndDrop({ clientToWorldPosition, camera }: UseDragAndDrop
       }
     } catch (error) {
       // 无法获取数据，这可能是正常的（首次尝试获取）
+      console.error('无法获取数据', error);
       return null;
     }
     

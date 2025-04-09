@@ -12,8 +12,7 @@ export function useKeyEvents({
   moveDistanceNormal = 1,
   moveDistanceShift = 10,
 }: UseKeyEventsProps = {}) {
-  const { selectedItemIds, removeItems, clearSelection, updateItem } =
-    useCanvasStore();
+  const { selectedItemIds, removeItems, clearSelection } = useCanvasStore();
 
   // 移动选中元素的函数
   const moveSelectedItems = useCallback(
@@ -21,7 +20,7 @@ export function useKeyEvents({
       if (selectedItemIds.size === 0) return;
 
       const store = useCanvasStore.getState();
-      const settings = store.settings;
+      // const settings = store.settings;
       const visibleItems = store.getItems();
       const ids = Array.from(selectedItemIds);
       const itemUpdates: Array<{ id: string; updates: Partial<CanvasItem> }> =
@@ -32,8 +31,8 @@ export function useKeyEvents({
         const item = visibleItems.find((item) => item.objid === id);
         if (!item) continue;
 
-        let newLeft = item.boxLeft + dx;
-        let newTop = item.boxTop + dy;
+        const newLeft = item.boxLeft + dx;
+        const newTop = item.boxTop + dy;
 
         itemUpdates.push({
           id,
@@ -163,11 +162,15 @@ export function useKeyEvents({
 
   // 绑定和解绑键盘事件
   useEffect(() => {
-    window.addEventListener("keydown", handleKeyDown);
+    console.log(window.addEventListener("keydown", handleKeyDown));
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [handleKeyDown]);
+
+  useEffect(() => {
+    console.log("1111111111111111111")
+  }, []);
 
   return {
     moveSelectedItems,

@@ -1,7 +1,7 @@
 // src/hooks/useCanvas.ts 修改版本
 import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { useCanvasStore } from '@/state/store';
-import { Point, Rect } from '@/types';
+import { Point } from '@/types';
 import { useRender } from './useRender';
 import { useKeyEvents } from './useKeyEvents';
 import { useDragAndDrop } from './useDragAndDrop';
@@ -59,7 +59,6 @@ export function useCanvas() {
 
   // 使用渲染Hook
   const { 
-    render, 
     startRendering, 
     stopRendering, 
     visibleItems, 
@@ -74,11 +73,8 @@ export function useCanvas() {
     isDraggingItem: false,
     visibleViewport
   });
+  const _ = useKeyEvents();
 
-  // 使用键盘事件Hook
-  const { moveSelectedItems } = useKeyEvents();
-
-  
   const {
     isDraggingCanvas,
     isDraggingItem,

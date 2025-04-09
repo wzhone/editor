@@ -2,7 +2,7 @@
 import React, { useRef, useState } from 'react';
 import { useCanvasStore, useItems } from '../../state/store';
 import { readFileAsText } from '../../utils/file';
-import { saveLayout, loadLayout } from '../../utils/api';
+// import { saveLayout, loadLayout } from '../../utils/api';
 import { Button } from '../ui/button';
 import { toast } from 'sonner';
 
@@ -23,7 +23,6 @@ const ImportExportPanel: React.FC = () => {
     clearItems,
     saveToLocalStorage,
     loadFromLocalStorage,
-    setItems
   } = useCanvasStore();
 
   // 获取当前项目数量
@@ -142,65 +141,65 @@ const ImportExportPanel: React.FC = () => {
   };
 
   // 保存布局到服务器
-  const handleSaveToServer = async () => {
-    if (items.length === 0) {
-      toast.warning('没有元素可保存');
-      return;
-    }
+  // const handleSaveToServer = async () => {
+  //   if (items.length === 0) {
+  //     toast.warning('没有元素可保存');
+  //     return;
+  //   }
 
-    setLoading(true);
-    try {
-      const response = await saveLayout(items);
-      if (response.success) {
-        toast.success('保存成功');
-        setSuccess('布局保存到服务器成功');
-      } else {
-        toast.error(`保存失败: ${response.error}`);
-        setError(`保存到服务器失败: ${response.error}`);
-      }
-    } catch (error) {
-      toast.error(`保存失败: ${(error as Error).message}`);
-      setError(`保存到服务器失败: ${(error as Error).message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
+  //   setLoading(true);
+  //   try {
+  //     const response = await saveLayout(items);
+  //     if (response.success) {
+  //       toast.success('保存成功');
+  //       setSuccess('布局保存到服务器成功');
+  //     } else {
+  //       toast.error(`保存失败: ${response.error}`);
+  //       setError(`保存到服务器失败: ${response.error}`);
+  //     }
+  //   } catch (error) {
+  //     toast.error(`保存失败: ${(error as Error).message}`);
+  //     setError(`保存到服务器失败: ${(error as Error).message}`);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   // 从服务器加载布局
-  const handleLoadFromServer = async () => {
-    setError(null);
-    setSuccess(null);
-    setLoading(true);
+  // const handleLoadFromServer = async () => {
+  //   setError(null);
+  //   setSuccess(null);
+  //   setLoading(true);
 
-    try {
-      const data = await loadLayout();
+  //   try {
+  //     const data = await loadLayout();
 
-      // 检查数据完整性和正确性
-      data.forEach((item) => {
-        if (!item.objid) {
-          throw new Error('数据不完整：缺少 objid');
-        }
+  //     // 检查数据完整性和正确性
+  //     data.forEach((item) => {
+  //       if (!item.objid) {
+  //         throw new Error('数据不完整：缺少 objid');
+  //       }
 
-        // 限定showType
-        if (item.showType !== 'rectangle' && item.showType !== 'ellipse') {
-          throw new Error(
-            '数据不完整：showType 只能为 rectangle 或 ellipse'
-          )
-        }
-      })
+  //       // 限定showType
+  //       if (item.showType !== 'rectangle' && item.showType !== 'ellipse') {
+  //         throw new Error(
+  //           '数据不完整：showType 只能为 rectangle 或 ellipse'
+  //         )
+  //       }
+  //     })
 
-      // 设置数据到store
-      setItems(data);
+  //     // 设置数据到store
+  //     setItems(data);
 
-      toast.success('布局加载成功');
-      setSuccess(`成功从服务器加载 ${data.length} 个元素`);
-    } catch (error) {
-      toast.error(`加载失败: ${(error as Error).message}`);
-      setError(`从服务器加载失败: ${(error as Error).message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     toast.success('布局加载成功');
+  //     setSuccess(`成功从服务器加载 ${data.length} 个元素`);
+  //   } catch (error) {
+  //     toast.error(`加载失败: ${(error as Error).message}`);
+  //     setError(`从服务器加载失败: ${(error as Error).message}`);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   return (
     <div className="p-4 space-y-4">

@@ -1,9 +1,7 @@
 // src/components/ControlPanel/DraggableElementCreator.tsx
 "use client";
-import React, { useState } from 'react';
+import React from 'react';
 import { useCanvasStore } from '../../state/store';
-import { COLOR_PRESETS } from '../PropertyPanel/ColorPicker';
-import { CanvasItem } from '../../types';
 
 // 元素模板类型
 interface ElementTemplate {
@@ -21,7 +19,6 @@ interface ElementTemplate {
  */
 const DraggableElementCreator: React.FC = () => {
   const { templateItem, setTemplateItem } = useCanvasStore();
-  const [customizing, setCustomizing] = useState<ElementTemplate | null>(null);
 
   // 预定义的元素模板
   const elementTemplates: ElementTemplate[] = [

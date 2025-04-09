@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React from 'react';
 import { useCanvasStore } from '../../state/store';
 import { CanvasItem } from '../../types';
 import ColorPicker from './ColorPicker';

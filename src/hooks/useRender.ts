@@ -1,7 +1,7 @@
 // src/hooks/useRender.ts 修改版本
 import { useCallback, useMemo, useRef, useEffect } from "react";
 import { useCanvasStore } from "@/state/store";
-import { CanvasItem, Point, Rect } from "@/types";
+import { CanvasItem, Rect } from "@/types";
 import * as CanvasUtils from "@/utils/canvasUtils";
 import { CameraState } from "@/types";
 

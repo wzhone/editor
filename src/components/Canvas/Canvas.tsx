@@ -1,6 +1,5 @@
 "use client";
-import React, { useEffect } from 'react';
-import { useCanvasStore } from '@/state/store';
+import React from 'react';
 import CanvasControls from './CanvasControls';
 import CanvasStatusBar from './CanvasStatusBar';
 import { useCanvas } from '@/hooks/useCanvas';
@@ -34,15 +33,15 @@ const Canvas: React.FC = () => {
   } = useCanvas();
 
   // 记录性能
-  useEffect(() => {
-    const now = performance.now();
+  // useEffect(() => {
+  //   const now = performance.now();
 
-    return () => {
-      // 组件卸载时计算渲染时间
-      const renderTime = performance.now() - now;
-      console.log(`Canvas render time: ${renderTime.toFixed(2)}ms`);
-    };
-  }, []);
+  //   return () => {
+  //     // 组件卸载时计算渲染时间
+  //     const renderTime = performance.now() - now;
+  //     console.log(`Canvas render time: ${renderTime.toFixed(2)}ms`);
+  //   };
+  // }, []);
 
   // 获取预览元素样式
   const previewStyle = getPreviewStyle ? getPreviewStyle() : null;

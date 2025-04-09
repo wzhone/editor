@@ -1,10 +1,9 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback } from "react";
 import { useCanvasStore } from "@/state/store";
 import { Point, Rect, CanvasItem } from "@/types";
 import * as CanvasUtils from "@/utils/canvasUtils";
 import {
   calculateSnappedPosition,
-  getSelectionEdgePoints,
 } from "@/utils/collisionUtils";
 
 interface UseCanvasInteractionProps {
@@ -34,7 +33,6 @@ export function useCanvasInteraction({
     selectItem,
     selectItems,
     clearSelection,
-    updateItem,
   } = useCanvasStore();
 
   // 状态
@@ -133,7 +131,6 @@ export function useCanvasInteraction({
       if (settings.autoMag && newPositionsArray.length > 0) {
         // 获取第一个元素做为吸附参考
         const {
-          id: primaryId,
           item: primaryItem,
           newLeft: primaryLeft,
           newTop: primaryTop,

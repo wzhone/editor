@@ -1,6 +1,5 @@
 "use client";
 import React from 'react';
-import { useCanvasStore } from '../../state/store';
 import { Button } from '../ui/button';
 import { Plus, Minus } from 'lucide-react';
 
@@ -24,14 +23,6 @@ const CanvasControls: React.FC<CanvasControlsProps> = ({
   onZoomOut,
   onResetView,
 }) => {
-  const { settings, updateSettings } = useCanvasStore();
-
-  // 切换设置的处理函数
-  const handleToggleSetting = (setting: keyof typeof settings) => {
-    updateSettings({
-      [setting]: !settings[setting]
-    });
-  };
 
   return (
     <div className="flex items-center justify-between p-2 bg-white border-b shadow-sm">
