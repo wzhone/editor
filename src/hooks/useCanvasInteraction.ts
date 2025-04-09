@@ -56,14 +56,14 @@ export function useCanvasInteraction({
     rect: { left: number; top: number; width: number; height: number };
   } | null>(null);
 
-  // 查找指定位置的元素
+  // 鼠标点击，查找指定位置的元素
   const findItemAtPosition = useCallback(
     (pos: Point): CanvasItem | undefined => {
       // 点击容差（像素）
       const tolerance = 2 / camera.zoom; // 根据缩放级别动态调整点击容差
 
       // 按z-index反向排序，优先检测顶层元素
-      const sortedItems = [...visibleItems];
+      const sortedItems = [...visibleItems].reverse();
 
       // 添加容差的检测区域
       const checkRect = {
@@ -390,7 +390,6 @@ export function useCanvasInteraction({
 
       // 获取世界坐标
       const worldPos = clientToWorldPosition(e.clientX, e.clientY);
-
       setDragStartPoint(worldPos);
 
       // 查找点击位置的元素

@@ -14,7 +14,7 @@ export default function useGrid() {
       viewportBottom: number,
       zoom: number,
       color: string = "#aaaaaa",
-      opacity: number = 0.2
+      opacity: number = 0.3
     ) => {
       const gridSize = settings.gridSize;
 

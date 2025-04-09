@@ -55,6 +55,7 @@ export function useRender({
     );
   }, [getItems, visibleViewport, itemsMap]); // 添加 itemsMap 作为依赖项，确保元素更新时重新计算
 
+
   // 使用记忆化获取选中的元素
   const selectedItems = useMemo(() => {
     return visibleItems.filter((item) => selectedItemIds.has(item.objid));
@@ -223,7 +224,7 @@ export function useRender({
     drawGrid(offCtx);
 
     // 逆序绘制，以配合点击查找逻辑
-    const sortedItems = [...visibleItems].reverse();
+    const sortedItems = [...visibleItems];
 
     // 绘制可见元素
     for (const item of sortedItems) {

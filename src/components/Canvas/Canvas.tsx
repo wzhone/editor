@@ -93,7 +93,7 @@ const Canvas: React.FC = () => {
   
     return handles;
   };
-  
+
   return (
     <div className="flex flex-col h-full w-full">
       {/* 顶部控制栏 */}
@@ -160,7 +160,7 @@ const Canvas: React.FC = () => {
         )}
 
         {/* 添加调整大小控制点 */}
-        {renderResizeHandles()}
+        {/* {renderResizeHandles()} */}
       </div>
     </div>
   );
