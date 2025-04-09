@@ -461,8 +461,8 @@ export function useCanvasInteraction({
 
         updateCamera({
           position: {
-            x: camera.position.x + dx,
-            y: camera.position.y + dy,
+            x: camera.position.x - dx,
+            y: camera.position.y - dy,
           },
         });
         setDragStartPos({ x: e.clientX, y: e.clientY });
@@ -565,23 +565,20 @@ export function useCanvasInteraction({
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
 
-      // 计算鼠标在画布内容中的位置
+      // 计算鼠标在世界坐标中的位置（使用新的坐标系统）
       const mousePointTo = {
-        x: (mouseX - camera.position.x) / oldScale,
-        y: (mouseY - camera.position.y) / oldScale,
+        x: (mouseX + camera.position.x) / oldScale,
+        y: (mouseY + camera.position.y) / oldScale,
       };
 
       // 计算新的缩放级别
       let newScale = e.deltaY < 0 ? oldScale * scaleBy : oldScale / scaleBy;
       newScale = Math.max(0.2, Math.min(5, newScale)); // 限制缩放范围
 
-      // 如果缩放级别没有变化，直接返回
-      if (newScale === oldScale) return;
-
       // 更新相机位置，保持鼠标指向不变
       const newPos = {
-        x: mouseX - mousePointTo.x * newScale,
-        y: mouseY - mousePointTo.y * newScale,
+        x: mousePointTo.x * newScale - mouseX,
+        y: mousePointTo.y * newScale - mouseY,
       };
 
       // 更新相机状态

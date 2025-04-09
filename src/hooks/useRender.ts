@@ -55,7 +55,6 @@ export function useRender({
     );
   }, [getItems, visibleViewport, itemsMap]); // 添加 itemsMap 作为依赖项，确保元素更新时重新计算
 
-
   // 使用记忆化获取选中的元素
   const selectedItems = useMemo(() => {
     return visibleItems.filter((item) => selectedItemIds.has(item.objid));
@@ -217,7 +216,7 @@ export function useRender({
     offCtx.scale(devicePixelRatio, devicePixelRatio);
 
     // 应用相机变换
-    offCtx.translate(camera.position.x, camera.position.y);
+    offCtx.translate(-camera.position.x, -camera.position.y);
     offCtx.scale(camera.zoom, camera.zoom);
 
     // 绘制背景网格

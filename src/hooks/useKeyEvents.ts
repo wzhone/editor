@@ -162,7 +162,7 @@ export function useKeyEvents({
 
   // 绑定和解绑键盘事件
   useEffect(() => {
-    console.log(window.addEventListener("keydown", handleKeyDown));
+    window.addEventListener("keydown", handleKeyDown);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };

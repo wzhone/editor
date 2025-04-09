@@ -28,10 +28,10 @@ export function useCanvas() {
     const { position, zoom } = camera;
 
     return {
-      left: -position.x / zoom,
-      top: -position.y / zoom,
-      right: (-position.x + width) / zoom,
-      bottom: (-position.y + height) / zoom,
+      left: position.x / zoom,
+      top: position.y / zoom,
+      right: (position.x + width) / zoom,
+      bottom: (position.y + height) / zoom,
       width: width / zoom,
       height: height / zoom,
     };
@@ -44,16 +44,15 @@ export function useCanvas() {
       if (!rect) {
         return { x: 0, y: 0 };
       }
-
       // 计算相对于canvas的位置
       const canvasX = clientX - rect.left;
       const canvasY = clientY - rect.top;
 
       // 将位置从屏幕坐标转换为世界坐标
-      const worldX = (canvasX - camera.position.x) / camera.zoom;
-      const worldY = (canvasY - camera.position.y) / camera.zoom;
-
-      return { x: worldX, y: worldY };
+      return {
+        x: (canvasX + camera.position.x) / camera.zoom,
+        y: (canvasY + camera.position.y) / camera.zoom,
+      };
     },
     [camera]
   );
@@ -174,47 +173,49 @@ export function useCanvas() {
     const oldScale = camera.zoom;
     const newScale = Math.min(oldScale * 1.2, 5);
 
-    // 计算画布中心
-    const centerX = dimensions.width / 2;
-    const centerY = dimensions.height / 2;
+    // 获取视口中心点的屏幕坐标
+    const viewportCenterX = dimensions.width / 2;
+    const viewportCenterY = dimensions.height / 2;
 
-    // 计算画布中心在世界坐标中的位置
-    const worldCenterX = (centerX - camera.position.x) / oldScale;
-    const worldCenterY = (centerY - camera.position.y) / oldScale;
+    // 计算视口中心在世界坐标系统中的位置
+    const worldCenterX = (viewportCenterX + camera.position.x) / oldScale;
+    const worldCenterY = (viewportCenterY + camera.position.y) / oldScale;
 
-    // 计算新的相机位置
-    const newPos = {
-      x: centerX - worldCenterX * newScale,
-      y: centerY - worldCenterY * newScale,
-    };
+    // 计算新的相机位置，使缩放中心保持在视口中心
+    const newPositionX = worldCenterX * newScale - viewportCenterX;
+    const newPositionY = worldCenterY * newScale - viewportCenterY;
 
     updateCamera({
-      position: newPos,
+      position: {
+        x: newPositionX,
+        y: newPositionY,
+      },
       zoom: newScale,
     });
   }, [camera, dimensions, updateCamera]);
 
-  // 缩小
+  // 缩小函数
   const zoomOut = useCallback(() => {
     const oldScale = camera.zoom;
     const newScale = Math.max(oldScale / 1.2, 0.2);
 
-    // 计算画布中心
-    const centerX = dimensions.width / 2;
-    const centerY = dimensions.height / 2;
+    // 获取视口中心点的屏幕坐标
+    const viewportCenterX = dimensions.width / 2;
+    const viewportCenterY = dimensions.height / 2;
 
-    // 计算画布中心在世界坐标中的位置
-    const worldCenterX = (centerX - camera.position.x) / oldScale;
-    const worldCenterY = (centerY - camera.position.y) / oldScale;
+    // 计算视口中心在世界坐标系统中的位置
+    const worldCenterX = (viewportCenterX + camera.position.x) / oldScale;
+    const worldCenterY = (viewportCenterY + camera.position.y) / oldScale;
 
-    // 计算新的相机位置
-    const newPos = {
-      x: centerX - worldCenterX * newScale,
-      y: centerY - worldCenterY * newScale,
-    };
+    // 计算新的相机位置，使缩放中心保持在视口中心
+    const newPositionX = worldCenterX * newScale - viewportCenterX;
+    const newPositionY = worldCenterY * newScale - viewportCenterY;
 
     updateCamera({
-      position: newPos,
+      position: {
+        x: newPositionX,
+        y: newPositionY,
+      },
       zoom: newScale,
     });
   }, [camera, dimensions, updateCamera]);
@@ -235,11 +236,11 @@ export function useCanvas() {
         clearSelection();
         selectItem(objid, false);
         const newX =
-          dimensions.width / 2 -
-          (item.boxLeft + item.boxWidth / 2) * camera.zoom;
+          (item.boxLeft + item.boxWidth / 2) * camera.zoom -
+          dimensions.width / 2;
         const newY =
-          dimensions.height / 2 -
-          (item.boxTop + item.boxHeight / 2) * camera.zoom;
+          (item.boxTop + item.boxHeight / 2) * camera.zoom -
+          dimensions.height / 2;
 
         // 更新相机位置
         updateCamera({
