@@ -87,24 +87,3 @@ export const apiRequest = async <T>(
     throw error;
   }
 };
-
-// 安全检查：验证API输入数据是否安全
-export const validateAPIInput = (data: any): boolean => {
-  return true;
-};
-
-// 安全地将数据发送到API
-export const secureSendToAPI = async <T>(
-  method: string,
-  endpoint: string,
-  data?: any,
-  config?: AxiosRequestConfig
-): Promise<ApiResponse<T>> => {
-  // 验证输入数据
-  if (data && !validateAPIInput(data)) {
-    throw "检测到不安全的输入数据";
-  }
-
-  // 继续安全的API请求
-  return apiRequest<T>(method, endpoint, data, config);
-};

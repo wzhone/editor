@@ -553,7 +553,7 @@ export const useCanvasStore = create<CanvasStore>((set, get) => {
       const sourceItem = itemsMap.get(sourceItemId);
       if (!sourceItem) return;
 
-      let newPosition = { x: sourceItem.boxLeft, y: sourceItem.boxTop };
+      const newPosition = { x: sourceItem.boxLeft, y: sourceItem.boxTop };
 
       // 根据方向确定位置
       switch (direction) {
