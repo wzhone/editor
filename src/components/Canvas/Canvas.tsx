@@ -156,8 +156,8 @@ export default function Canvas() {
           <div
             className="absolute border-2 border-blue-500 bg-blue-100/20 pointer-events-none"
             style={{
-              left: selectionRect.x * camera.zoom + camera.position.x,
-              top: selectionRect.y * camera.zoom + camera.position.y,
+              left: selectionRect.x * camera.zoom - camera.position.x,
+              top: selectionRect.y * camera.zoom - camera.position.y,
               width: selectionRect.width * camera.zoom,
               height: selectionRect.height * camera.zoom
             }}
