@@ -11,7 +11,7 @@ export interface CanvasItem {
   equipId: string; // 设备ID
   showColor: string; // 显示颜色
   boxName: string; // 盒子名称
-  locId?: string; // 位置ID
+  locId: string; // 位置ID
   showType?: "rectangle" | "ellipse"; // 图形类型
   // showName?: string; // 显示名称（可选）
 }

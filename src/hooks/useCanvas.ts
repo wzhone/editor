@@ -1,25 +1,26 @@
 // src/hooks/useCanvas.ts 修改版本
-import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
-import { useCanvasStore } from '@/state/store';
-import { Point } from '@/types';
-import { useRender } from './useRender';
-import { useKeyEvents } from './useKeyEvents';
-import { useDragAndDrop } from './useDragAndDrop';
-import { useCanvasInteraction } from './useCanvasInteraction';
+import { useRef, useState, useEffect, useCallback, useMemo } from "react";
+import { useCanvasStore } from "@/state/store";
+import { Point } from "@/types";
+import { useRender } from "./useRender";
+import { useKeyEvents } from "./useKeyEvents";
+import { useDragAndDrop } from "./useDragAndDrop";
+import { useCanvasInteraction } from "./useCanvasInteraction";
 
 export function useCanvas() {
   // Canvas引用
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  
+
   // 双缓冲画布 - 提高渲染性能
   const offscreenCanvasRef = useRef<HTMLCanvasElement | null>(null);
-  
+
   // 容器尺寸状态
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-  
+
   // 从Store获取状态
-  const { camera, updateCamera } = useCanvasStore();
+  const { camera, updateCamera, itemsMap, clearSelection, selectItem } =
+    useCanvasStore();
 
   // 计算可见视口区域
   const visibleViewport = useMemo(() => {
@@ -32,7 +33,7 @@ export function useCanvas() {
       right: (-position.x + width) / zoom,
       bottom: (-position.y + height) / zoom,
       width: width / zoom,
-      height: height / zoom
+      height: height / zoom,
     };
   }, [dimensions, camera]);
 
@@ -58,21 +59,17 @@ export function useCanvas() {
   );
 
   // 使用渲染Hook
-  const { 
-    startRendering, 
-    stopRendering, 
-    visibleItems, 
-    selectedItems 
-  } = useRender({
-    canvasRef: canvasRef as any,
-    offscreenCanvasRef: offscreenCanvasRef as any,
-    dimensions,
-    camera,
-    isSelecting: false,  // 这些值会从交互Hook中更新
-    selectionRect: null,
-    isDraggingItem: false,
-    visibleViewport
-  });
+  const { startRendering, stopRendering, visibleItems, selectedItems } =
+    useRender({
+      canvasRef: canvasRef as any,
+      offscreenCanvasRef: offscreenCanvasRef as any,
+      dimensions,
+      camera,
+      isSelecting: false, // 这些值会从交互Hook中更新
+      selectionRect: null,
+      isDraggingItem: false,
+      visibleViewport,
+    });
   const _ = useKeyEvents();
 
   const {
@@ -86,11 +83,11 @@ export function useCanvas() {
     handleMouseMove,
     handleMouseUp,
     handleContextMenu,
-    handleWheel
+    handleWheel,
   } = useCanvasInteraction({
     clientToWorldPosition,
     visibleItems,
-    visibleViewport
+    visibleViewport,
   });
 
   // 使用拖放Hook
@@ -101,13 +98,12 @@ export function useCanvas() {
     handleDragOver,
     handleDragLeave,
     handleDrop,
-    getPreviewStyle
+    getPreviewStyle,
   } = useDragAndDrop({
     clientToWorldPosition,
-    camera
+    camera,
   });
 
-  // 修正的useEffect，确保画布尺寸正确
   useEffect(() => {
     const updateDimensions = () => {
       if (containerRef.current) {
@@ -131,7 +127,7 @@ export function useCanvas() {
 
         // 调整离屏画布
         if (!offscreenCanvasRef.current) {
-          const canvas = document.createElement('canvas');
+          const canvas = document.createElement("canvas");
           offscreenCanvasRef.current = canvas;
         }
 
@@ -157,11 +153,11 @@ export function useCanvas() {
     }
 
     // 同时监听窗口大小变化
-    window.addEventListener('resize', updateDimensions);
+    window.addEventListener("resize", updateDimensions);
 
     return () => {
       resizeObserver.disconnect();
-      window.removeEventListener('resize', updateDimensions);
+      window.removeEventListener("resize", updateDimensions);
     };
   }, []);
 
@@ -231,6 +227,42 @@ export function useCanvas() {
     });
   }, [updateCamera]);
 
+  // 高亮元素
+  const highlightItem = useCallback(
+    (objid: string) => {
+      const item = itemsMap.get(objid);
+      if (item) {
+        clearSelection();
+        selectItem(objid, false);
+        const newX =
+          dimensions.width / 2 -
+          (item.boxLeft + item.boxWidth / 2) * camera.zoom;
+        const newY =
+          dimensions.height / 2 -
+          (item.boxTop + item.boxHeight / 2) * camera.zoom;
+
+        // 更新相机位置
+        updateCamera({
+          position: {
+            x: newX,
+            y: newY,
+          },
+        });
+      }
+    },
+    [
+      itemsMap,
+      clearSelection,
+      selectItem,
+      updateCamera,
+      dimensions,
+      camera.zoom,
+    ]
+  );
+  // useEffect(() => {
+  //   console.log("camera", camera);
+  // },[camera])
+
   // 根据当前交互状态返回鼠标样式
   const getCursorStyle = useCallback(() => {
     if (isDraggingCanvas) return "grabbing";
@@ -244,7 +276,7 @@ export function useCanvas() {
     // 引用
     canvasRef,
     containerRef,
-    
+
     // 状态
     dimensions,
     camera,
@@ -260,7 +292,7 @@ export function useCanvas() {
     previewPosition,
     isResizing,
     resizeHandle,
-    
+
     // 事件处理
     handleMouseDown,
     handleMouseMove,
@@ -270,13 +302,14 @@ export function useCanvas() {
     handleDragOver,
     handleDragLeave,
     handleDrop,
-    
+
     // 功能函数
     zoomIn,
     zoomOut,
     resetView,
     getCursorStyle,
     clientToWorldPosition,
-    getPreviewStyle
+    getPreviewStyle,
+    highlightItem,
   };
 }

@@ -1,7 +1,8 @@
 "use client";
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '../ui/button';
-import { Plus, Minus } from 'lucide-react';
+import { Plus, Minus, Search } from 'lucide-react';
+import { FindItemDialog } from './FindItem';
 
 /**
  * 画布控制栏属性
@@ -11,6 +12,7 @@ interface CanvasControlsProps {
   onZoomIn: () => void;
   onZoomOut: () => void;
   onResetView: () => void;
+  onHightlightItem: (objid: string) => void;
 }
 
 /**
@@ -22,7 +24,12 @@ const CanvasControls: React.FC<CanvasControlsProps> = ({
   onZoomIn,
   onZoomOut,
   onResetView,
+  onHightlightItem
 }) => {
+
+  // 查询相关逻辑
+  // const 
+  const [openFindDialog, setOpenFindDialog] = useState(false);
 
   return (
     <div className="flex items-center justify-between p-2 bg-white border-b shadow-sm">
@@ -48,6 +55,16 @@ const CanvasControls: React.FC<CanvasControlsProps> = ({
           variant="ghost"
         >
           <Plus />
+        </Button>
+
+        <FindItemDialog onHightlightItem={onHightlightItem} open={openFindDialog} onOpenChange={setOpenFindDialog} />
+        <Button
+          className="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100"
+          onClick={() => setOpenFindDialog(true)}
+          title="查询"
+          variant="ghost"
+        >
+          <Search />
         </Button>
 
         <Button

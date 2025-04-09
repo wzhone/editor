@@ -1,6 +1,6 @@
 // src/components/Canvas/Canvas.tsx 中添加大小调整控制点
 "use client";
-import React from 'react';
+import React, { useState } from 'react';
 import CanvasControls from './CanvasControls';
 import CanvasStatusBar from './CanvasStatusBar';
 import { useCanvas } from '@/hooks/useCanvas';
@@ -9,7 +9,8 @@ import { useCanvas } from '@/hooks/useCanvas';
  * 画布组件 - 最终优化版
  * 使用自定义Hook分离逻辑
  */
-const Canvas: React.FC = () => {
+export default function Canvas() {
+
   const {
     canvasRef,
     containerRef,
@@ -35,23 +36,26 @@ const Canvas: React.FC = () => {
     getPreviewStyle,
     selectedItems,
     isResizing,  // 是否正在调整大小
-    resizeHandle  // 调整大小的控制点
+    resizeHandle,  // 调整大小的控制点
+    highlightItem
   } = useCanvas();
 
+
+  const [openFindDialog, setOpenFindDialog] = useState(false);
 
   // 渲染调整大小的控制点 - 仅在选中单个元素时显示
   const renderResizeHandles = () => {
     if (selectedItems.length !== 1 || isResizing) return null;
-  
+
     const item = selectedItems[0];
     const handles: any[] = [];
-  
+
     // 根据相机缩放和位置计算控制点位置
     const left = item.boxLeft * camera.zoom + camera.position.x;
     const top = item.boxTop * camera.zoom + camera.position.y;
     const width = item.boxWidth * camera.zoom;
     const height = item.boxHeight * camera.zoom;
-  
+
     // 控制点位置：左上、上中、右上、右中、右下、下中、左下、左中
     const positions = [
       { x: left, y: top, cursor: 'nwse-resize', position: 'nw' },
@@ -63,7 +67,7 @@ const Canvas: React.FC = () => {
       { x: left, y: top + height, cursor: 'nesw-resize', position: 'sw' },
       { x: left, y: top + height / 2, cursor: 'ew-resize', position: 'w' }
     ];
-  
+
     // 渲染8个调整大小的控制点
     positions.forEach((pos, index) => {
       handles.push(
@@ -81,7 +85,7 @@ const Canvas: React.FC = () => {
             // 阻止事件冒泡，避免触发画布的mouseDown
             e.stopPropagation();
             e.preventDefault();
-            
+
             // 处理开始调整大小
             if (resizeHandle && typeof resizeHandle.handleResizeStart === 'function') {
               resizeHandle.handleResizeStart(e, pos.position);
@@ -90,7 +94,7 @@ const Canvas: React.FC = () => {
         />
       );
     });
-  
+
     return handles;
   };
 
@@ -102,6 +106,7 @@ const Canvas: React.FC = () => {
         onZoomIn={zoomIn}
         onZoomOut={zoomOut}
         onResetView={resetView}
+        onHightlightItem={highlightItem}
       />
 
       {/* 画布容器 */}
@@ -165,5 +170,3 @@ const Canvas: React.FC = () => {
     </div>
   );
 };
-
-export default Canvas;
