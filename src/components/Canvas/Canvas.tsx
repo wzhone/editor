@@ -7,7 +7,6 @@ import * as CanvasUtils from '@/utils/canvasUtils';
 import { calculateSnappedPosition } from '@/utils/collisionUtils';
 import { useRender } from '@/hooks/useRender';
 import { useKeyEvents } from '@/hooks/useKeyEvents';
-import { useDragAndDrop } from '@/hooks/useDragAndDrop';
 import { useCameraStore } from '@/state/camera';
 import { useSettingStore } from '@/state/settings';
 
@@ -631,20 +630,6 @@ export default function Canvas() {
     [camera.position, camera.zoom, updateCamera]
   );
 
-  // 使用拖放Hook
-  const {
-    isDragOver,
-    previewItem,
-    previewPosition,
-    handleDragOver,
-    handleDragLeave,
-    handleDrop,
-    getPreviewStyle,
-  } = useDragAndDrop({
-    clientToWorldPosition,
-    camera,
-  });
-
   useEffect(() => {
     const updateDimensions = () => {
       if (containerRef.current) {
@@ -744,14 +729,6 @@ export default function Canvas() {
     ]
   );
 
-  // 根据当前交互状态返回鼠标样式
-  const getCursorStyle = useCallback(() => {
-    if (isDraggingCanvas) return "grabbing";
-    if (isDraggingItem) return "move";
-    if (isSelecting) return "crosshair";
-    if (isDragOver) return "copy";
-    return "default";
-  }, [isDraggingCanvas, isDraggingItem, isSelecting, isDragOver]);
 
   // 调整大小控制对象
   const resizeHandleObj = {
@@ -824,7 +801,6 @@ export default function Canvas() {
         ref={containerRef}
         className="flex-1 relative overflow-hidden bg-gray-100"
         style={{
-          cursor: getCursorStyle(),
           touchAction: 'none'
         }}
       >
@@ -843,23 +819,11 @@ export default function Canvas() {
             onMouseLeave={handleMouseUp}
             onContextMenu={handleContextMenu}
             onWheel={handleWheel}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
           />
         )}
 
         {/* 状态指示器 */}
         <CanvasStatusBar />
-
-        {/* 仅当没有预览元素时显示拖拽提示遮罩 */}
-        {isDragOver && !previewItem && (
-          <div className="absolute inset-0 border-2 border-dashed border-blue-500 bg-blue-100/20 pointer-events-none flex items-center justify-center">
-            <div className="bg-white px-4 py-2 rounded shadow">
-              拖放到此处创建元素
-            </div>
-          </div>
-        )}
 
         {/* 添加框选矩形显示 */}
         {isSelecting && selectionRect && (

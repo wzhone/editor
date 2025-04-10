@@ -11,7 +11,6 @@ interface UseRenderProps {
   canvasRef: React.RefObject<HTMLCanvasElement>;
   offscreenCanvasRef: React.RefObject<HTMLCanvasElement>;
   selectionRect: Rect | null;
-  isDraggingItem: boolean;
   visibleViewport: {
     left: number;
     top: number;
@@ -26,7 +25,6 @@ export function useRender({
   canvasRef,
   offscreenCanvasRef,
   selectionRect,
-  isDraggingItem,
   visibleViewport,
 }: UseRenderProps) {
   const camera = useCameraStore((state) => state.camera);
@@ -260,7 +258,6 @@ export function useRender({
     drawGrid,
     drawItem,
     drawSelectionRect,
-    isDraggingItem,
     selectedItemIds,
     selectionRect,
     settings,

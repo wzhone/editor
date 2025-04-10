@@ -16,6 +16,8 @@ import {
 import { useState } from "react"
 import { Import, Export } from "./ImportExport"
 import { useSettingStore } from "@/state/settings";
+import { Menu } from "lucide-react";
+import { FindItemDialog } from "./Canvas/FindItem";
 
 
 export default function MenubarDemo() {
@@ -41,11 +43,13 @@ export default function MenubarDemo() {
 
   const [importOpen, setImportOpen] = useState(false)
   const [exportOpen, setExportOpen] = useState(false)
+  const [findOpen, setFindOpen] = useState(false)
 
   return (
-    <>
+    <div>
       <Import open={importOpen} onOpenChange={setImportOpen} />
       <Export open={exportOpen} onOpenChange={setExportOpen} />
+      <FindItemDialog open={findOpen} onOpenChange={setFindOpen} />
       <Menubar>
         <MenubarMenu>
           <MenubarTrigger>文件</MenubarTrigger>
@@ -56,17 +60,19 @@ export default function MenubarDemo() {
             <MenubarItem onClick={() => setExportOpen(true)}>
               导出<MenubarShortcut>Ctrl+S</MenubarShortcut>
             </MenubarItem>
+            <MenubarSeparator />
+
           </MenubarContent>
         </MenubarMenu>
 
-        {/* <MenubarMenu>
-          <MenubarTrigger>视图</MenubarTrigger>
+        <MenubarMenu>
+          <MenubarTrigger>操作</MenubarTrigger>
           <MenubarContent>
-            <MenubarItem onClick={() => camera.zoomIn()}>
-
+            <MenubarItem onClick={() => setFindOpen(true)}>
+              查找<MenubarShortcut>Ctrl+F</MenubarShortcut>
             </MenubarItem>
           </MenubarContent>
-        </MenubarMenu> */}
+        </MenubarMenu>
 
         <MenubarMenu>
           <MenubarTrigger>设置</MenubarTrigger>
@@ -86,21 +92,16 @@ export default function MenubarDemo() {
               onCheckedChange={() => handleDefaultSetting()}>重置默认设置</MenubarCheckboxItem>
           </MenubarContent>
         </MenubarMenu>
-        {/* <MenubarMenu>
-          <MenubarTrigger>Profiles</MenubarTrigger>
+        
+        <MenubarMenu>
+          <MenubarTrigger>关于</MenubarTrigger>
           <MenubarContent>
-            <MenubarRadioGroup value="benoit">
-              <MenubarRadioItem value="andy">Andy</MenubarRadioItem>
-              <MenubarRadioItem value="benoit">Benoit</MenubarRadioItem>
-              <MenubarRadioItem value="Luis">Luis</MenubarRadioItem>
-            </MenubarRadioGroup>
-            <MenubarSeparator />
-            <MenubarItem inset>Edit...</MenubarItem>
-            <MenubarSeparator />
-            <MenubarItem inset>Add Profile...</MenubarItem>
+            <MenubarItem>
+              Powered by wzh
+            </MenubarItem>
           </MenubarContent>
-        </MenubarMenu> */}
+        </MenubarMenu>
       </Menubar>
-    </>
+    </div>
   )
 }

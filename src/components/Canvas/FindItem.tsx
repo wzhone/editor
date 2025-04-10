@@ -22,7 +22,6 @@ export function FindItemDialog({ open, onOpenChange, onHightlightItem }: any) {
 
   const [value, setValue] = useState('')
 
-
   // 注册全局快捷键
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

@@ -1,7 +1,7 @@
 "use client";
 import React from 'react';
 import { useCanvasStore } from '../../state/item';
-import DraggableElementCreator from './DraggableElementCreator';
+import DraggableElementCreator from './ElementCreator';
 import GlobalSettings from './GlobalSettings';
 
 /**
@@ -10,9 +10,8 @@ import GlobalSettings from './GlobalSettings';
  */
 const ControlPanel: React.FC = () => {
 
-
   return (
-    <div className="w-64 h-full bg-white border-r overflow-y-auto flex flex-col">
+    <div className="w-64  bg-white border-r overflow-y-auto flex flex-col">
       <div className="p-3 border-b">
         <h2 className="text-lg font-semibold">编辑器</h2>
       </div>
@@ -29,8 +28,10 @@ const ControlPanel: React.FC = () => {
         <GlobalSettings />
       </div>
 
+      <div className='flex-1'></div>
+
       {/* 使用说明 */}
-      <div className="mt-auto p-3 bg-gray-50 text-xs text-gray-600">
+      <div className=" p-3 bg-gray-50 text-xs text-gray-600">
         <h4 className="font-medium mb-1">快捷键:</h4>
         <ul className="space-y-1 ml-2">
           <li>方向键: 移动元素</li>

@@ -15,12 +15,12 @@ const IndexPage: React.FC = () => {
       {/* 顶部菜单 */}
       <Menu />
 
-      <div className='flex-1 flex'>
+      <div className='flex flex-1'>
         {/* 左侧控制面板 */}
         <ControlPanel />
 
         {/* 中间画布区域 */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1">
           <Canvas />
         </div>
 
