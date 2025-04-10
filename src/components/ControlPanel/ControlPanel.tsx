@@ -46,7 +46,9 @@ const ControlPanel: React.FC = () => {
           <li>方向键: 移动元素</li>
           <li>Delete: 删除元素</li>
           <li>Esc: 取消选择</li>
-          <li>快速模式下:</li>
+          <li>Ctrl+O: 导入</li>
+          <li>Ctrl+S: 导出</li>
+          <li>快速插入模式下:</li>
           <li className="ml-2">W: 上方创建</li>
           <li className="ml-2">A: 左侧创建</li>
           <li className="ml-2">S: 下方创建</li>

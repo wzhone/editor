@@ -222,13 +222,11 @@ export function useRender({
     // 绘制背景网格
     drawGrid(offCtx);
 
-    // 逆序绘制，以配合点击查找逻辑
     const sortedItems = [...visibleItems];
 
     // 绘制可见元素
     for (const item of sortedItems) {
-      const isSelected = selectedItemIds.has(item.objid);
-      drawItem(offCtx, item, isSelected);
+      drawItem(offCtx, item, selectedItemIds.has(item.objid));
     }
 
     // 绘制选择框（如果存在）

@@ -53,10 +53,7 @@ interface CanvasStore {
     interaction: Partial<typeof initialState.interaction>
   ) => void;
   clearItems: () => void;
-  exportToJSON: () => void;
   importFromJSON: (jsonData: string) => boolean;
-  saveToLocalStorage: () => boolean;
-  loadFromLocalStorage: () => boolean;
   getItems: () => CanvasItem[];
   getSelectedItems: () => CanvasItem[];
 
@@ -358,27 +355,6 @@ export const useCanvasStore = create<CanvasStore>((set, get) => {
       });
     },
 
-    // 导出到JSON
-    exportToJSON: () => {
-      const state = get();
-      const items = state.getItems();
-
-      if (items.length === 0) {
-        alert("没有元素可导出");
-        return;
-      }
-
-      const data = {
-        items,
-        settings: state.settings,
-        camera: state.camera,
-      };
-
-      const timestamp = new Date().toLocaleString().replace(/[/:. ]/g, "-");
-      const fileName = `visual-layout-${timestamp}.json`;
-      const blob = createJSONBlob(data);
-      downloadBlob(blob, fileName);
-    },
 
     // 从JSON导入
     importFromJSON: (jsonData) => {
@@ -407,67 +383,6 @@ export const useCanvasStore = create<CanvasStore>((set, get) => {
         return true;
       } catch (error) {
         console.error("导入JSON失败:", error);
-        return false;
-      }
-    },
-
-    // 保存到LocalStorage
-    saveToLocalStorage: () => {
-      if (typeof window === "undefined") return false;
-
-      try {
-        const state = get();
-        const items = state.getItems();
-
-        const data = {
-          items,
-          settings: state.settings,
-          camera: state.camera,
-          timestamp: Date.now(),
-        };
-
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
-
-        // 更新最后保存时间
-        state.updateInteraction({ lastSaveTime: Date.now() });
-
-        return true;
-      } catch (error) {
-        console.error("保存到LocalStorage失败:", error);
-        return false;
-      }
-    },
-
-    // 从LocalStorage加载
-    loadFromLocalStorage: () => {
-      if (typeof window === "undefined") return false;
-
-      try {
-        const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
-        if (!savedData) return false;
-        const data = JSON.parse(savedData);
-        if (!data.items || !Array.isArray(data.items)) {
-          return false;
-        }
-
-        // 初始化ID计数器
-        initIdCounter(data.items);
-
-        // 设置项目
-        get().setItems(data.items);
-
-        // 导入设置和相机状态
-        if (data.settings) {
-          get().updateSettings(data.settings);
-        }
-
-        if (data.camera) {
-          get().updateCamera(data.camera);
-        }
-
-        return true;
-      } catch (error) {
-        console.error("从LocalStorage加载失败:", error);
         return false;
       }
     },
