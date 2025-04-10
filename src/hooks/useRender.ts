@@ -168,26 +168,6 @@ export function useRender({
     [camera, settings]
   );
 
-  // 绘制选择框
-  const drawSelectionRect = useCallback(
-    (ctx: CanvasRenderingContext2D, rect: Rect) => {
-      const { zoom } = camera;
-
-      CanvasUtils.drawSelectionRect(
-        ctx,
-        rect.x,
-        rect.y,
-        rect.width,
-        rect.height,
-        "#0066cc",
-        "rgba(0, 102, 204, 0.1)",
-        1 / zoom,
-        [5 / zoom, 5 / zoom]
-      );
-    },
-    [camera]
-  );
-
   // 主渲染函数
   const render = useCallback(() => {
     const canvas = canvasRef.current;
@@ -257,7 +237,6 @@ export function useRender({
     camera,
     drawGrid,
     drawItem,
-    drawSelectionRect,
     selectedItemIds,
     selectionRect,
     settings,

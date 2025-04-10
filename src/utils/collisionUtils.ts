@@ -1,42 +1,6 @@
 import { CanvasItem, Point, Rect } from "../types";
 
 /**
- * 检查点是否在元素内部
- */
-export function isPointInItem(point: Point, item: CanvasItem): boolean {
-  if (item.showType === "ellipse") {
-    const centerX = item.boxLeft + item.boxWidth / 2;
-    const centerY = item.boxTop + item.boxHeight / 2;
-    const radiusX = item.boxWidth / 2;
-    const radiusY = item.boxHeight / 2;
-    
-    const dx = (point.x - centerX) / radiusX;
-    const dy = (point.y - centerY) / radiusY;
-    return dx * dx + dy * dy <= 1;
-  } else {
-    // 默认为矩形
-    return (
-      point.x >= item.boxLeft &&
-      point.x <= item.boxLeft + item.boxWidth &&
-      point.y >= item.boxTop &&
-      point.y <= item.boxTop + item.boxHeight
-    );
-  }
-}
-
-/**
- * 检查两个矩形是否相交
- */
-export function doRectsIntersect(a: Rect, b: Rect): boolean {
-  return !(
-    a.x + a.width <= b.x ||
-    a.x >= b.x + b.width ||
-    a.y + a.height <= b.y ||
-    a.y >= b.y + b.height
-  );
-}
-
-/**
  * 查找给定位置最近的对齐点
  * @param value 当前位置
  * @param snapPoints 吸附点数组

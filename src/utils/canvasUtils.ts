@@ -172,32 +172,6 @@ export function drawCenteredText(
   ctx.fillText(text, x, y, maxWidth);
 }
 
-/**
- * 绘制选择框
- */
-export function drawSelectionRect(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  strokeStyle: string = "#0066cc",
-  fillStyle: string = "rgba(0, 102, 204, 0.1)",
-  lineWidth: number = 1,
-  dashPattern: number[] = [5, 5]
-): void {
-  ctx.fillStyle = fillStyle;
-  ctx.strokeStyle = strokeStyle;
-  ctx.lineWidth = lineWidth;
-  
-  // 绘制填充矩形
-  ctx.fillRect(x, y, width, height);
-  
-  // 绘制虚线边框
-  ctx.setLineDash(dashPattern);
-  ctx.strokeRect(x, y, width, height);
-  ctx.setLineDash([]);
-}
 
 /**
  * 优化渲染 - 仅渲染视口内的项目

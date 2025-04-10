@@ -738,60 +738,6 @@ export default function Canvas() {
 
   const [openFindDialog, setOpenFindDialog] = useState(false);
 
-  // 渲染调整大小的控制点 - 仅在选中单个元素时显示
-  const renderResizeHandles = () => {
-    if (selectedItems.length !== 1 || isResizing) return null;
-
-    const item = selectedItems[0];
-    const handles: any[] = [];
-
-    // 根据相机缩放和位置计算控制点位置
-    const left = item.boxLeft * camera.zoom + camera.position.x;
-    const top = item.boxTop * camera.zoom + camera.position.y;
-    const width = item.boxWidth * camera.zoom;
-    const height = item.boxHeight * camera.zoom;
-
-    // 控制点位置：左上、上中、右上、右中、右下、下中、左下、左中
-    const positions = [
-      { x: left, y: top, cursor: 'nwse-resize', position: 'nw' },
-      { x: left + width / 2, y: top, cursor: 'ns-resize', position: 'n' },
-      { x: left + width, y: top, cursor: 'nesw-resize', position: 'ne' },
-      { x: left + width, y: top + height / 2, cursor: 'ew-resize', position: 'e' },
-      { x: left + width, y: top + height, cursor: 'nwse-resize', position: 'se' },
-      { x: left + width / 2, y: top + height, cursor: 'ns-resize', position: 's' },
-      { x: left, y: top + height, cursor: 'nesw-resize', position: 'sw' },
-      { x: left, y: top + height / 2, cursor: 'ew-resize', position: 'w' }
-    ];
-
-    // // 渲染8个调整大小的控制点
-    // positions.forEach((pos, index) => {
-    //   handles.push(
-    //     <div
-    //       key={`resize-handle-${index}`}
-    //       className="absolute w-2 h-2 bg-blue-500 border border-white rounded-full z-50 hover:bg-blue-600 hover:w-3 hover:h-3"
-    //       style={{
-    //         cursor: pos.cursor,
-    //         left: pos.x - 4,  // 控制点尺寸为8px，需要减去一半以居中
-    //         top: pos.y - 4,
-    //         pointerEvents: 'all'  // 确保可点击
-    //       }}
-    //       data-handle={pos.position}
-    //       onMouseDown={(e) => {
-    //         // 阻止事件冒泡，避免触发画布的mouseDown
-    //         e.stopPropagation();
-    //         e.preventDefault();
-
-    //         // 处理开始调整大小
-    //         if (resizeHandle && typeof resizeHandle.handleResizeStart === 'function') {
-    //           resizeHandle.handleResizeStart(e, pos.position);
-    //         }
-    //       }}
-    //     />
-    //   );
-    // });
-
-    return handles;
-  };
 
   return (
     <div className="flex flex-col h-full w-full">
