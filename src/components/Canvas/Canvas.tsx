@@ -633,59 +633,58 @@ export default function Canvas() {
   useEffect(() => {
     const updateDimensions = () => {
       if (containerRef.current) {
-        // 获取容器实际尺寸
-        const width = containerRef.current.clientWidth;
-        const height = containerRef.current.clientHeight;
+        // 使用 requestAnimationFrame 确保在下一帧渲染前更新尺寸
+        // requestAnimationFrame(() => {
+          // 获取容器实际尺寸
+          const rect = containerRef.current.getBoundingClientRect();
+          const width = Math.floor(rect.width);
+          const height = Math.floor(rect.height);
 
-        // 更新尺寸状态
-        updateDimension(width, height)
+          // 仅当尺寸真正改变时更新状态
+          if (width !== dimension.width || height !== dimension.height) {
+            // 更新尺寸状态
+            updateDimension(width, height);
 
-        // 调整主画布
-        if (canvasRef.current) {
-          const devicePixelRatio = window.devicePixelRatio || 1;
-          // 设置画布元素的CSS尺寸
-          canvasRef.current.style.width = `${width}px`;
-          canvasRef.current.style.height = `${height}px`;
-          // 设置画布元素的实际尺寸(考虑设备像素比)
-          canvasRef.current.width = width * devicePixelRatio;
-          canvasRef.current.height = height * devicePixelRatio;
-        }
+            // 调整主画布
+            if (canvasRef.current) {
+              const devicePixelRatio = window.devicePixelRatio || 1;
+              // 设置画布元素的CSS尺寸
+              // canvasRef.current.style.width = `${width}px`;
+              // canvasRef.current.style.height = `${height}px`;
+              // 设置画布元素的实际尺寸
+              canvasRef.current.width = Math.floor(width * devicePixelRatio);
+              canvasRef.current.height = Math.floor(height * devicePixelRatio);
+            }
 
-        // 调整离屏画布
-        if (!offscreenCanvasRef.current) {
-          const canvas = document.createElement("canvas");
-          offscreenCanvasRef.current = canvas;
-        }
+            // 调整离屏画布
+            if (!offscreenCanvasRef.current) {
+              const canvas = document.createElement("canvas");
+              offscreenCanvasRef.current = canvas;
+            }
 
-        // 设置离屏画布的尺寸
-        const offscreenCanvas = offscreenCanvasRef.current;
-        const devicePixelRatio = window.devicePixelRatio || 1;
-        offscreenCanvas.width = width * devicePixelRatio;
-        offscreenCanvas.height = height * devicePixelRatio;
+            // 设置离屏画布的尺寸
+            const offscreenCanvas = offscreenCanvasRef.current;
+            offscreenCanvas.width = Math.floor(width * devicePixelRatio);
+            offscreenCanvas.height = Math.floor(height * devicePixelRatio);
+          }
+        // });
       }
     };
 
-    // 初始尺寸设置
-    updateDimensions();
+    // 初始尺寸设置 - 使用 setTimeout 确保 DOM 已经渲染
+    setTimeout(updateDimensions, 0);
 
-    // 使用ResizeObserver监听尺寸变化
-    const resizeObserver = new ResizeObserver(() => {
-      // 使用requestAnimationFrame减少更新频率
-      requestAnimationFrame(updateDimensions);
-    });
+    // 仅使用 ResizeObserver
+    const resizeObserver = new ResizeObserver(updateDimensions);
 
     if (containerRef.current) {
       resizeObserver.observe(containerRef.current);
     }
 
-    // 同时监听窗口大小变化
-    window.addEventListener("resize", updateDimensions);
-
     return () => {
       resizeObserver.disconnect();
-      window.removeEventListener("resize", updateDimensions);
     };
-  }, []);
+  }, [dimension, updateDimension]);
 
   // 启动渲染循环
   useEffect(() => {
@@ -807,8 +806,7 @@ export default function Canvas() {
         {dimension.width > 0 && dimension.height > 0 && (
           <canvas
             ref={canvasRef}
-            width={dimension.width}
-            height={dimension.height}
+            className="absolute inset-0"
             style={{
               width: '100%',
               height: '100%'
@@ -830,16 +828,13 @@ export default function Canvas() {
           <div
             className="absolute border-2 border-blue-500 bg-blue-100/20 pointer-events-none"
             style={{
-              left: selectionRect.x * camera.zoom + camera.position.x,
-              top: selectionRect.y * camera.zoom + camera.position.y,
+              left: selectionRect.x * camera.zoom - camera.position.x,
+              top: selectionRect.y * camera.zoom - camera.position.y,
               width: selectionRect.width * camera.zoom,
               height: selectionRect.height * camera.zoom
             }}
           />
         )}
-
-        {/* 添加调整大小控制点 */}
-        {renderResizeHandles()}
       </div>
     </div>
   );
