@@ -1,7 +1,8 @@
 // src/hooks/useKeyEvents.ts
 import { useCallback, useEffect } from "react";
-import { useCanvasStore } from "@/state/store";
+import { useCanvasStore } from "@/state/item";
 import { CanvasItem } from "@/types";
+import { useSettingStore } from "@/state/settings";
 
 interface UseKeyEventsProps {
   moveDistanceNormal?: number;
@@ -14,12 +15,14 @@ export function useKeyEvents({
 }: UseKeyEventsProps = {}) {
   const { selectedItemIds, removeItems, clearSelection } = useCanvasStore();
 
+  const store = useCanvasStore();
+  const settings = useSettingStore();
+
   // 移动选中元素的函数
   const moveSelectedItems = useCallback(
     (dx: number, dy: number) => {
       if (selectedItemIds.size === 0) return;
 
-      const store = useCanvasStore.getState();
       // const settings = store.settings;
       const visibleItems = store.getItems();
       const ids = Array.from(selectedItemIds);
@@ -112,7 +115,7 @@ export function useKeyEvents({
         case "w":
         case "W":
           // 快速模式：上方创建
-          if (store.settings.fastMode && selectedItemIds.size === 1) {
+          if (settings.fastMode && selectedItemIds.size === 1) {
             const selectedId = ids[0];
             store.addAdjacentItem(selectedId, "up", store.templateItem);
             event.preventDefault();
@@ -122,7 +125,7 @@ export function useKeyEvents({
         case "a":
         case "A":
           // 快速模式：左侧创建
-          if (store.settings.fastMode && selectedItemIds.size === 1) {
+          if (settings.fastMode && selectedItemIds.size === 1) {
             const selectedId = ids[0];
             store.addAdjacentItem(selectedId, "left", store.templateItem);
             event.preventDefault();
@@ -132,7 +135,7 @@ export function useKeyEvents({
         case "s":
         case "S":
           // 快速模式：下方创建
-          if (store.settings.fastMode && selectedItemIds.size === 1) {
+          if (settings.fastMode && selectedItemIds.size === 1) {
             const selectedId = ids[0];
             store.addAdjacentItem(selectedId, "down", store.templateItem);
             event.preventDefault();
@@ -142,7 +145,7 @@ export function useKeyEvents({
         case "d":
         case "D":
           // 快速模式：右侧创建
-          if (store.settings.fastMode && selectedItemIds.size === 1) {
+          if (settings.fastMode && selectedItemIds.size === 1) {
             const selectedId = ids[0];
             store.addAdjacentItem(selectedId, "right", store.templateItem);
             event.preventDefault();

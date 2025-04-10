@@ -1,17 +1,15 @@
 // src/hooks/useRender.ts 修改版本
 import { useCallback, useMemo, useRef, useEffect } from "react";
-import { useCanvasStore } from "@/state/store";
+import { useCanvasStore } from "@/state/item";
 import { CanvasItem, Rect } from "@/types";
 import * as CanvasUtils from "@/utils/canvasUtils";
-import { CameraState } from "@/types";
 import useGrid from "./useGrid";
+import { useCameraStore } from "@/state/camera";
+import { useSettingStore } from "@/state/settings";
 
 interface UseRenderProps {
   canvasRef: React.RefObject<HTMLCanvasElement>;
   offscreenCanvasRef: React.RefObject<HTMLCanvasElement>;
-  dimensions: { width: number; height: number };
-  camera: CameraState;
-  isSelecting: boolean;
   selectionRect: Rect | null;
   isDraggingItem: boolean;
   visibleViewport: {
@@ -27,21 +25,21 @@ interface UseRenderProps {
 export function useRender({
   canvasRef,
   offscreenCanvasRef,
-  dimensions,
-  camera,
-  isSelecting,
   selectionRect,
   isDraggingItem,
   visibleViewport,
 }: UseRenderProps) {
+  const camera = useCameraStore((state) => state.camera);
+  const settings = useSettingStore();
+
   // 动画帧引用
   const animationFrameRef = useRef<number | null>(null);
 
   // 上次渲染的时间戳，用于优化帧率
-  const lastRenderTimeRef = useRef<number>(0);
+  // const lastRenderTimeRef = useRef<number>(0);
 
   // 从Store获取状态
-  const { settings, selectedItemIds, getItems, itemsMap } = useCanvasStore();
+  const { selectedItemIds, getItems, itemsMap } = useCanvasStore();
 
   // 使用记忆化获取可见元素，避免重复计算
   const visibleItems = useMemo(() => {
@@ -229,11 +227,6 @@ export function useRender({
       drawItem(offCtx, item, selectedItemIds.has(item.objid));
     }
 
-    // 绘制选择框（如果存在）
-    if (isSelecting && selectionRect) {
-      drawSelectionRect(offCtx, selectionRect);
-    }
-
     // 恢复初始状态
     offCtx.restore();
 
@@ -258,7 +251,7 @@ export function useRender({
     }
 
     // 更新上次渲染时间
-    lastRenderTimeRef.current = performance.now();
+    // lastRenderTimeRef.current = performance.now();
 
     // 请求下一帧动画
     animationFrameRef.current = requestAnimationFrame(render);
@@ -267,7 +260,6 @@ export function useRender({
     drawGrid,
     drawItem,
     drawSelectionRect,
-    isSelecting,
     isDraggingItem,
     selectedItemIds,
     selectionRect,
@@ -279,12 +271,10 @@ export function useRender({
 
   // 启动和停止渲染循环
   const startRendering = useCallback(() => {
-    if (dimensions.width > 0 && dimensions.height > 0) {
-      if (animationFrameRef.current === null) {
-        animationFrameRef.current = requestAnimationFrame(render);
-      }
+    if (animationFrameRef.current === null) {
+      animationFrameRef.current = requestAnimationFrame(render);
     }
-  }, [dimensions, render]);
+  }, [render]);
 
   const stopRendering = useCallback(() => {
     if (animationFrameRef.current !== null) {

@@ -1,6 +1,6 @@
 "use client";
 import React from 'react';
-import { useCanvasStore } from '../../state/store';
+import { useCanvasStore } from '../../state/item';
 import DraggableElementCreator from './DraggableElementCreator';
 import GlobalSettings from './GlobalSettings';
 
@@ -9,14 +9,7 @@ import GlobalSettings from './GlobalSettings';
  * 使用可拖拽元素创建器替代原始的点击创建方式
  */
 const ControlPanel: React.FC = () => {
-  const { settings, updateSettings } = useCanvasStore();
 
-  // 切换设置
-  const handleToggleSetting = (setting: string, value?: boolean) => {
-    updateSettings({
-      [setting]: value !== undefined ? value : !settings[setting as keyof typeof settings]
-    });
-  };
 
   return (
     <div className="w-64 h-full bg-white border-r overflow-y-auto flex flex-col">
@@ -33,10 +26,7 @@ const ControlPanel: React.FC = () => {
       {/* 全局设置 */}
       <div className="p-3">
         <h3 className="text-sm font-medium mb-2">全局设置</h3>
-        <GlobalSettings
-          settings={settings}
-          onToggle={handleToggleSetting}
-        />
+        <GlobalSettings />
       </div>
 
       {/* 使用说明 */}

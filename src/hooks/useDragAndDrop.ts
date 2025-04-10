@@ -1,7 +1,7 @@
 // src/hooks/useDragAndDrop.ts 的优化版本
 
 import { useCallback, useState, useRef } from 'react';
-import { useCanvasStore } from '@/state/store';
+import { useCanvasStore } from '@/state/item';
 import { CanvasItem, Point } from '@/types';
 import { toast } from 'sonner';
 

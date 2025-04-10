@@ -1,7 +1,7 @@
 // src/components/ControlPanel/DraggableElementCreator.tsx
 "use client";
 import React from 'react';
-import { useCanvasStore } from '../../state/store';
+import { useCanvasStore } from '../../state/item';
 
 // 元素模板类型
 interface ElementTemplate {

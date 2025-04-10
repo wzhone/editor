@@ -13,22 +13,23 @@ import {
   MenubarSubTrigger,
   MenubarTrigger,
 } from "@/components/ui/menubar"
-import { useCanvasStore } from "@/state/store"
 import { useState } from "react"
 import { Import, Export } from "./ImportExport"
+import { useSettingStore } from "@/state/settings";
+
 
 export default function MenubarDemo() {
 
-  const { settings, updateSettings } = useCanvasStore();
+  const settings = useSettingStore();
 
   // 切换设置
   const handleToggleSetting = (setting: string, value?: boolean) => {
-    updateSettings({
+    settings.updateSettings({
       [setting]: value !== undefined ? value : !settings[setting as keyof typeof settings]
     });
   };
   const handleDefaultSetting = () => {
-    updateSettings({
+    settings.updateSettings({
       fastMode: false,
       autoMag: true,
       showBoxCode: false,
@@ -61,11 +62,8 @@ export default function MenubarDemo() {
         {/* <MenubarMenu>
           <MenubarTrigger>视图</MenubarTrigger>
           <MenubarContent>
-            <MenubarItem>
-              放大画板
-            </MenubarItem>
-            <MenubarItem>
-              缩小画板
+            <MenubarItem onClick={() => camera.zoomIn()}>
+
             </MenubarItem>
           </MenubarContent>
         </MenubarMenu> */}

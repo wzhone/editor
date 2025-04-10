@@ -214,24 +214,6 @@ export function getVisibleItems(
   );
 }
 
-/**
- * 客户端坐标转换为画布世界坐标
- */
-export function clientToWorldPosition(
-  clientX: number,
-  clientY: number,
-  canvasRect: DOMRect,
-  cameraPosition: Point,
-  zoom: number
-): Point {
-  const canvasX = clientX - canvasRect.left;
-  const canvasY = clientY - canvasRect.top;
-  
-  return {
-    x: (canvasX - cameraPosition.x) / zoom,
-    y: (canvasY - cameraPosition.y) / zoom,
-  };
-}
 
 /**
  * 世界坐标转换为客户端坐标

@@ -1,28 +1,24 @@
 "use client";
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-
-interface GlobalSettingsProps {
-  settings: {
-    fastMode: boolean;
-    autoMag: boolean;
-    showBoxCode: boolean;
-    showEquipId: boolean;
-    showBoxName: boolean;
-    gridSize: number;
-  };
-  onToggle: (setting: string, value?: boolean) => void;
-}
+import { useSettingStore } from '@/state/settings';
 
 /**
  * 全局设置组件
  * 控制画布的全局设置和显示选项
  */
-const GlobalSettings: React.FC<GlobalSettingsProps> = ({
-  settings,
-  onToggle
-}) => {
+export default function GlobalSettings() {
+
+  const settings = useSettingStore()
+
+  // 切换设置
+  const onToggle = useCallback((setting: string, value?: boolean) => {
+    settings.updateSettings({
+      [setting]: value !== undefined ? value : !settings[setting as keyof typeof settings]
+    });
+  }, [settings]);
+
   return (
     <div className="space-y-2">
       <div className="flex items-center space-x-2 justify-between">
@@ -48,5 +44,3 @@ const GlobalSettings: React.FC<GlobalSettingsProps> = ({
     </div>
   );
 };
-
-export default GlobalSettings;

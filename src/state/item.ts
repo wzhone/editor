@@ -1,12 +1,7 @@
-// src/state/store.ts - 优化版全局状态管理
-"use client";
 import { create } from "zustand";
-import { CanvasItem, Point, Rect, CameraState } from "../types";
-import { createJSONBlob, downloadBlob } from "../utils/file";
+import { CanvasItem, Point, Rect } from "../types";
 import { generateId, initIdCounter } from "../utils/idGenerator";
 
-// 默认配置
-const LOCAL_STORAGE_KEY = "canvas-editor-state";
 
 // 状态接口
 interface CanvasStore {
@@ -14,18 +9,6 @@ interface CanvasStore {
   itemsMap: Map<string, CanvasItem>; // 使用Map存储items提高查询效率
   selectedItemIds: Set<string>; // 使用Set存储选中的多个元素ID
   templateItem: Partial<CanvasItem>; // 模板元素（用于创建新元素）
-
-  settings: {
-    fastMode: boolean;
-    autoMag: boolean;
-    showBoxCode: boolean;
-    showEquipId: boolean;
-    showBoxName: boolean;
-    gridSize: number;
-  };
-
-  // 相机/视图状态
-  camera: CameraState;
 
   // 交互状态
   interaction: {
@@ -47,13 +30,10 @@ interface CanvasStore {
   selectItems: (ids: string[]) => void;
   setTemplateItem: (templateItem: Partial<CanvasItem>) => void;
   clearSelection: () => void;
-  updateSettings: (settings: Partial<typeof initialState.settings>) => void;
-  updateCamera: (camera: Partial<typeof initialState.camera>) => void;
   updateInteraction: (
     interaction: Partial<typeof initialState.interaction>
   ) => void;
   clearItems: () => void;
-  importFromJSON: (jsonData: string) => boolean;
   getItems: () => CanvasItem[];
   getSelectedItems: () => CanvasItem[];
 
@@ -62,7 +42,6 @@ interface CanvasStore {
   selectItemById: (itemId: string) => void;
   clearSelectionAction: () => void;
   clearAllItems: () => void;
-  updateCameraPosition: (position: Point, zoom: number) => void;
   addAdjacentItem: (
     sourceItemId: string,
     direction: "up" | "down" | "left" | "right",
@@ -91,14 +70,7 @@ const initialState = {
     boxLeft: 10,
     boxTop: 10,
   } as Partial<CanvasItem>,
-  settings: {
-    fastMode: false,
-    autoMag: true,
-    showBoxCode: false,
-    showEquipId: false,
-    showBoxName: false,
-    gridSize: 50,
-  },
+
   camera: {
     position: { x: 0, y: 0 },
     zoom: 1,
@@ -327,17 +299,7 @@ export const useCanvasStore = create<CanvasStore>((set, get) => {
     // 设置模板项目
     setTemplateItem: (templateItem) => set({ templateItem }),
 
-    // 更新设置
-    updateSettings: (newSettings) =>
-      set((state) => ({
-        settings: { ...state.settings, ...newSettings },
-      })),
 
-    // 更新相机
-    updateCamera: (newCamera) =>
-      set((state) => ({
-        camera: { ...state.camera, ...newCamera },
-      })),
 
     // 更新交互状态
     updateInteraction: (newInteraction) =>
@@ -356,36 +318,6 @@ export const useCanvasStore = create<CanvasStore>((set, get) => {
     },
 
 
-    // 从JSON导入
-    importFromJSON: (jsonData) => {
-      try {
-        const data = JSON.parse(jsonData);
-
-        if (!data.items || !Array.isArray(data.items)) {
-          throw new Error("无效的JSON数据格式");
-        }
-
-        // 初始化ID计数器
-        initIdCounter(data.items);
-
-        // 设置项目
-        get().setItems(data.items);
-
-        // 可选：导入设置和相机状态
-        if (data.settings) {
-          get().updateSettings(data.settings);
-        }
-
-        if (data.camera) {
-          get().updateCamera(data.camera);
-        }
-
-        return true;
-      } catch (error) {
-        console.error("导入JSON失败:", error);
-        return false;
-      }
-    },
 
     // 获取items数组 - 使用缓存避免重复创建数组
     getItems: () => {
@@ -447,17 +379,6 @@ export const useCanvasStore = create<CanvasStore>((set, get) => {
     // 清除所有元素
     clearAllItems: () => {
       get().clearItems();
-    },
-
-    // 更新相机位置
-    updateCameraPosition: (position, zoom) => {
-      get().updateCamera({
-        position: {
-          x: position.x,
-          y: position.y,
-        },
-        zoom,
-      });
     },
 
     // 添加相邻元素（快速模式）

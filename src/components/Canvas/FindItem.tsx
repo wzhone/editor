@@ -10,7 +10,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { useCanvasStore } from "@/state/store"
+import { useCanvasStore } from "@/state/item"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { CanvasItem } from "@/types"
@@ -21,6 +21,21 @@ export function FindItemDialog({ open, onOpenChange, onHightlightItem }: any) {
   const { itemsMap } = useCanvasStore()
 
   const [value, setValue] = useState('')
+
+
+  // 注册全局快捷键
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key.toLowerCase() === 'f') {
+        e.preventDefault(); // 阻止默认行为
+        onOpenChange(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   const lst = useMemo(() => [...itemsMap], [itemsMap])
   const filterResult = useMemo(() => {

@@ -1,6 +1,6 @@
 "use client";
 import React from 'react';
-import { useCanvasStore } from '../../state/store';
+import { useCanvasStore } from '../../state/item';
 import { CanvasItem } from '../../types';
 import ColorPicker from './ColorPicker';
 import { Button } from '../ui/button';

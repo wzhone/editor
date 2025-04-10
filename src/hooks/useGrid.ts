@@ -1,9 +1,8 @@
-// 绘制背景的网格
 import React, { useCallback } from "react";
-import { useCanvasStore } from "@/state/store";
+import { useSettingStore } from "@/state/settings";
 
 export default function useGrid() {
-  const { settings } = useCanvasStore();
+  const settings = useSettingStore();
 
   return useCallback(
     (

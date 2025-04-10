@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { useCanvasStore, useSelectedItems, useHasMultipleSelection } from '../../state/store';
+import { useCanvasStore, useSelectedItems, useHasMultipleSelection } from '../../state/item';
 import ElementProperties from './ElementProperties';
 import MultiSelectProperties from './MultiSelectProperties';
 

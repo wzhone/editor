@@ -1,6 +1,6 @@
 "use client";
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useCanvasStore, useItems } from '../state/store';
+import { useCanvasStore, useItems } from '../state/item';
 import { createJSONBlob, downloadBlob, readFileAsText } from '../utils/file';
 import { Button } from './ui/button';
 import { toast } from 'sonner';
@@ -20,11 +20,15 @@ import { Label } from "@/components/ui/label"
 import { MenubarItem } from '@radix-ui/react-menubar';
 import { MenubarShortcut } from './ui/menubar';
 import { CanvasItem } from '@/types';
+import { initIdCounter } from '@/utils/idGenerator';
+import { useCameraStore } from '@/state/camera';
 
 export function Import({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const { importFromJSON, getItems } = useCanvasStore();
+  const fileInputRef = useRef<HTMLInputElement>(null);  
+  const items = useCanvasStore()
+  const camera = useCameraStore()
+
 
   const handleImportClick = useCallback(() => {
     if (fileInputRef.current) {
@@ -39,14 +43,27 @@ export function Import({ open, onOpenChange }: { open: boolean, onOpenChange: (o
 
     try {
       const content = await readFileAsText(file);
-      const success = importFromJSON(content);
+      try {
+        const data = JSON.parse(content);
 
-      if (success) {
-        const itemsCount = getItems().length;
+        if (!data.items || !Array.isArray(data.items)) {
+          throw new Error("无效的JSON数据格式");
+        }
+
+        // 初始化ID计数器
+        initIdCounter(data.items);
+
+        // 设置项目
+        items.setItems(data.items);
+        const itemsCount = data.items.length;
+        camera.resetCamera(); // 回到一开始的相机位置
         toast.success(`成功导入布局数据，包含 ${itemsCount} 个元素`, { position: 'top-center' });
         onOpenChange(false);
-      } else {
+      } catch (error) {
+        console.error("导入JSON失败:", error);
         toast.error('导入失败：无效的JSON数据格式', { position: 'top-center' });
+
+        return false;
       }
     } catch (err) {
       toast.error(`导入失败：${(err as Error).message}`, { position: 'top-center' });
@@ -101,11 +118,7 @@ export function Import({ open, onOpenChange }: { open: boolean, onOpenChange: (o
 
 export function Export({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
   // 从store获取方法和数据
-
   const state = useCanvasStore();
-  const items = useItems();
-
-
 
   // 注册全局快捷键
   useEffect(() => {
@@ -132,8 +145,7 @@ export function Export({ open, onOpenChange }: { open: boolean, onOpenChange: (o
       }
       const data = {
         items,
-        settings: state.settings,
-        camera: state.camera,
+        saveTime: Date.now(),
       };
       const timestamp = new Date().toLocaleString().replace(/[/:. ]/g, "-");
       const fileName = `visual-layout-${timestamp}.json`;
