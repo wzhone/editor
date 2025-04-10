@@ -92,7 +92,7 @@ export default function MenubarDemo() {
               onCheckedChange={() => handleDefaultSetting()}>重置默认设置</MenubarCheckboxItem>
           </MenubarContent>
         </MenubarMenu>
-        
+
         <MenubarMenu>
           <MenubarTrigger>关于</MenubarTrigger>
           <MenubarContent>

@@ -63,8 +63,8 @@ export default function ElementCreator() {
     const worldY = (viewportCenterY + camera.position.y) / camera.zoom;
 
     // 调整元素位置使其中心位于视口中心
-    const boxLeft = worldX - template.boxWidth / 2;
-    const boxTop = worldY - template.boxHeight / 2;
+    const boxLeft = Math.round(worldX - template.boxWidth / 2);
+    const boxTop = Math.round(worldY - template.boxHeight / 2);
 
     // 创建新元素
     const newItem = {

@@ -35,10 +35,7 @@ const ControlPanel: React.FC = () => {
           <li>Delete: 删除元素</li>
           <li>Esc: 取消选择</li>
           <li>快速插入模式下:</li>
-          <li className="ml-2">W: 上方创建</li>
-          <li className="ml-2">A: 左侧创建</li>
-          <li className="ml-2">S: 下方创建</li>
-          <li className="ml-2">D: 右侧创建</li>
+          <li className="ml-2">W/A/S/D: 快速创建</li>
         </ul>
         <h4 className="font-medium my-1">操作说明:</h4>
         <ul className="space-y-1 ml-2">

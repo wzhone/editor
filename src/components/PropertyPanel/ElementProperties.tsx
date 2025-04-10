@@ -102,7 +102,7 @@ const ElementProperties: React.FC<ElementPropertiesProps> = ({ item }) => {
             value={item.boxWidth}
             onChange={(e) => handleUpdate('boxWidth', parseFloat(e.target.value))}
             className="w-full px-2 py-1 border rounded text-sm"
-            min={10}
+            min={3}
           />
         </div>
         <div>
@@ -112,7 +112,7 @@ const ElementProperties: React.FC<ElementPropertiesProps> = ({ item }) => {
             value={item.boxHeight}
             onChange={(e) => handleUpdate('boxHeight', parseFloat(e.target.value))}
             className="w-full px-2 py-1 border rounded text-sm"
-            min={10}
+            min={3}
           />
         </div>
       </div>
