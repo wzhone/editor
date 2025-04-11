@@ -12,9 +12,6 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
 
   // 配置 assetPrefix，否则服务器无法正确解析您的资产。
   assetPrefix: isProd ? undefined : `http://${internalHost}:3000`,

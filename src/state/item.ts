@@ -2,13 +2,11 @@ import { create } from "zustand";
 import { CanvasItem, Point, Rect } from "../types";
 import { generateId, initIdCounter } from "../utils/idGenerator";
 
-
 // 状态接口
 interface CanvasStore {
   // 数据状态
   itemsMap: Map<string, CanvasItem>; // 使用Map存储items提高查询效率
   selectedItemIds: Set<string>; // 使用Set存储选中的多个元素ID
-  templateItem: Partial<CanvasItem>; // 模板元素（用于创建新元素）
 
   // 交互状态
   interaction: {
@@ -28,7 +26,6 @@ interface CanvasStore {
   removeItems: (ids: string[]) => void;
   selectItem: (id: string, isMultiSelect: boolean) => void;
   selectItems: (ids: string[]) => void;
-  setTemplateItem: (templateItem: Partial<CanvasItem>) => void;
   clearSelection: () => void;
   updateInteraction: (
     interaction: Partial<typeof initialState.interaction>
@@ -44,8 +41,7 @@ interface CanvasStore {
   clearAllItems: () => void;
   addAdjacentItem: (
     sourceItemId: string,
-    direction: "up" | "down" | "left" | "right",
-    template: Partial<CanvasItem>
+    direction: "up" | "down" | "left" | "right"
   ) => void;
 
   // 批量操作
@@ -58,18 +54,6 @@ interface CanvasStore {
 const initialState = {
   itemsMap: new Map<string, CanvasItem>(),
   selectedItemIds: new Set<string>(),
-  templateItem: {
-    boxWidth: 20,
-    boxHeight: 20,
-    showColor: "#4682B4",
-    boxCode: "",
-    equipId: "",
-    boxName: "",
-    locId: "",
-    showType: "rectangle", // 默认为矩形
-    boxLeft: 10,
-    boxTop: 10,
-  } as Partial<CanvasItem>,
 
   camera: {
     position: { x: 0, y: 0 },
@@ -296,11 +280,6 @@ export const useCanvasStore = create<CanvasStore>((set, get) => {
       set({ selectedItemIds: new Set() });
     },
 
-    // 设置模板项目
-    setTemplateItem: (templateItem) => set({ templateItem }),
-
-
-
     // 更新交互状态
     updateInteraction: (newInteraction) =>
       set((state) => ({
@@ -316,8 +295,6 @@ export const useCanvasStore = create<CanvasStore>((set, get) => {
         selectedItemIds: new Set(),
       });
     },
-
-
 
     // 获取items数组 - 使用缓存避免重复创建数组
     getItems: () => {

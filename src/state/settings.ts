@@ -20,7 +20,7 @@ interface SettingsStore {
   updateSettings: (settings: Partial<typeof initialState>) => void;
 }
 
-export const useSettingStore = create<SettingsStore>((set, get) => {
+export const useSettingStore = create<SettingsStore>((set) => {
   return {
     ...initialState,
 

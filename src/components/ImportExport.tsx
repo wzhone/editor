@@ -1,31 +1,25 @@
 "use client";
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useCanvasStore, useItems } from '../state/item';
+import React, { useCallback, useEffect, useRef } from 'react';
+import { useCanvasStore } from '../state/item';
 import { createJSONBlob, downloadBlob, readFileAsText } from '../utils/file';
 import { Button } from './ui/button';
 import { toast } from 'sonner';
-
 
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { MenubarItem } from '@radix-ui/react-menubar';
-import { MenubarShortcut } from './ui/menubar';
 import { CanvasItem } from '@/types';
 import { initIdCounter } from '@/utils/idGenerator';
 import { useCameraStore } from '@/state/camera';
 
 export function Import({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
 
-  const fileInputRef = useRef<HTMLInputElement>(null);  
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const items = useCanvasStore()
   const camera = useCameraStore()
 
@@ -34,7 +28,7 @@ export function Import({ open, onOpenChange }: { open: boolean, onOpenChange: (o
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
-  }, [fileInputRef.current]);
+  }, []);
 
   // 处理文件选择
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -88,7 +82,7 @@ export function Import({ open, onOpenChange }: { open: boolean, onOpenChange: (o
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  }, [onOpenChange]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -132,7 +126,7 @@ export function Export({ open, onOpenChange }: { open: boolean, onOpenChange: (o
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  }, [onOpenChange]);
 
 
   // 导出到JSON文件

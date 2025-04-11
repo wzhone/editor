@@ -1,4 +1,4 @@
-import { CanvasItem, Point, Rect } from "../types";
+import { CanvasItem } from "../types";
 
 /**
  * 查找给定位置最近的对齐点

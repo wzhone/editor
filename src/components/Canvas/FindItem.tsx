@@ -7,14 +7,12 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { useCanvasStore } from "@/state/item"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { CanvasItem } from "@/types"
-import { debounce } from "lodash"
 
 export function FindItemDialog({ open, onOpenChange, onHightlightItem }: any) {
 
@@ -34,7 +32,7 @@ export function FindItemDialog({ open, onOpenChange, onHightlightItem }: any) {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  }, [onOpenChange]);
 
   const lst = useMemo(() => [...itemsMap], [itemsMap])
   const filterResult = useMemo(() => {

@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import { useCallback } from "react";
 import { useSettingStore } from "@/state/settings";
 
 export default function useGrid() {

@@ -1,6 +1,6 @@
 "use client";
 import React from 'react';
-import { useCanvasStore, useItems, useSelectedItems } from '../../state/item';
+import { useItems, useSelectedItems } from '../../state/item';
 import { Check, RotateCcw, Search, Tally4 } from 'lucide-react';
 import { Minus, Plus } from "lucide-react";
 import { Button } from '../ui/button';

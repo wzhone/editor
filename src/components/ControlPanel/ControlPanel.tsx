@@ -1,6 +1,5 @@
 "use client";
 import React from 'react';
-import { useCanvasStore } from '../../state/item';
 import DraggableElementCreator from './ElementCreator';
 import GlobalSettings from './GlobalSettings';
 

@@ -1,7 +1,7 @@
 // src/hooks/useRender.ts 修改版本
 import { useCallback, useMemo, useRef, useEffect } from "react";
 import { useCanvasStore } from "@/state/item";
-import { CanvasItem, Rect } from "@/types";
+import { CanvasItem } from "@/types";
 import * as CanvasUtils from "@/utils/canvasUtils";
 import useGrid from "./useGrid";
 import { useCameraStore } from "@/state/camera";
@@ -10,7 +10,6 @@ import { useSettingStore } from "@/state/settings";
 interface UseRenderProps {
   canvasRef: React.RefObject<HTMLCanvasElement>;
   offscreenCanvasRef: React.RefObject<HTMLCanvasElement>;
-  selectionRect: Rect | null;
   visibleViewport: {
     left: number;
     top: number;
@@ -24,7 +23,6 @@ interface UseRenderProps {
 export function useRender({
   canvasRef,
   offscreenCanvasRef,
-  selectionRect,
   visibleViewport,
 }: UseRenderProps) {
   const camera = useCameraStore((state) => state.camera);
@@ -37,7 +35,7 @@ export function useRender({
   // const lastRenderTimeRef = useRef<number>(0);
 
   // 从Store获取状态
-  const { selectedItemIds, getItems, itemsMap } = useCanvasStore();
+  const { selectedItemIds, getItems } = useCanvasStore();
 
   // 使用记忆化获取可见元素，避免重复计算
   const visibleItems = useMemo(() => {
@@ -49,7 +47,7 @@ export function useRender({
       visibleViewport.right,
       visibleViewport.bottom
     );
-  }, [getItems, visibleViewport, itemsMap]); // 添加 itemsMap 作为依赖项，确保元素更新时重新计算
+  }, [getItems, visibleViewport]); // 添加 itemsMap 作为依赖项，确保元素更新时重新计算
 
   // 使用记忆化获取选中的元素
   const selectedItems = useMemo(() => {
@@ -238,8 +236,6 @@ export function useRender({
     drawGrid,
     drawItem,
     selectedItemIds,
-    selectionRect,
-    settings,
     visibleItems,
     canvasRef,
     offscreenCanvasRef,

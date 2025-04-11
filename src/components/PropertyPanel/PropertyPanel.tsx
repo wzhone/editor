@@ -13,15 +13,13 @@ const PropertyPanel: React.FC = () => {
   const selectedItems = useSelectedItems();
   const hasMultipleSelection = useHasMultipleSelection();
 
-  // 面板切换状态
-  const [activeTab, setActiveTab] = useState<'properties' | 'import-export'>('properties');
-
   // 实时更新的元素属性缓存
   const [syncedItems, setSyncedItems] = useState(selectedItems);
+  const { getItems } = useCanvasStore()
 
   // 监听元素变化，保持属性面板同步更新
   useEffect(() => {
-    const items = useCanvasStore.getState().getItems();
+    const items = getItems();
 
     // 从items中找出当前选中的元素，确保使用最新的属性
     const updatedSelectedItems = selectedItems.map(selectedItem => {
@@ -30,7 +28,7 @@ const PropertyPanel: React.FC = () => {
     });
 
     setSyncedItems(updatedSelectedItems);
-  }, [selectedItems, useCanvasStore]);
+  }, [selectedItems, getItems]);
 
   // 监听全局更新
   useEffect(() => {
@@ -38,7 +36,7 @@ const PropertyPanel: React.FC = () => {
     const unsubscribe = useCanvasStore.subscribe(
       () => {
         if (selectedItems.length > 0) {
-          const items = useCanvasStore.getState().getItems();
+          const items = getItems();
 
           // 从items中找出当前选中的元素
           const updatedSelectedItems = selectedItems.map(selectedItem => {
@@ -52,7 +50,7 @@ const PropertyPanel: React.FC = () => {
     );
 
     return () => unsubscribe();
-  }, [selectedItems]);
+  }, [selectedItems, getItems]);
 
   // 渲染属性面板内容
   const renderContent = () => {

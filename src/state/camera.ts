@@ -1,6 +1,5 @@
 import { create } from "zustand";
-import { CanvasItem, Point, Rect } from "../types";
-import { generateId, initIdCounter } from "../utils/idGenerator";
+import { Point } from "../types";
 
 const initialState = {
   camera: {

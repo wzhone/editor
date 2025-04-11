@@ -3,6 +3,7 @@
 import React from 'react';
 import { useCanvasStore } from '../../state/item';
 import { useCameraStore } from '@/state/camera'; // 添加这一行引入视口状态
+import { generateId } from '@/utils/idGenerator';
 
 // 元素模板类型
 interface ElementTemplate {
@@ -15,8 +16,14 @@ interface ElementTemplate {
 }
 
 export default function ElementCreator() {
-  const { templateItem, setTemplateItem, addItem } = useCanvasStore();
+  const { addItem } = useCanvasStore();
   const { camera, dimension } = useCameraStore(); // 添加这一行获取相机状态
+
+  const [boxCode, setBoxCode] = React.useState('');
+  const [equipId, setEquipId] = React.useState('');
+  const [boxName, setBoxName] = React.useState('');
+  const [locId, setLocId] = React.useState('');
+
 
   // 预定义的元素模板
   const elementTemplates: ElementTemplate[] = [
@@ -38,21 +45,9 @@ export default function ElementCreator() {
     }
   ];
 
-  // 选择模板并更新全局模板项
-  const selectTemplate = (template: ElementTemplate) => {
-    setTemplateItem({
-      ...templateItem,
-      boxWidth: template.boxWidth,
-      boxHeight: template.boxHeight,
-      showType: template.showType,
-      showColor: template.showColor
-    });
-  };
 
   // 创建元素方法
   const createItem = (template: ElementTemplate) => {
-    // 更新当前模板
-    selectTemplate(template);
 
     // 计算视口中心的世界坐标
     const viewportCenterX = dimension.width / 2;
@@ -68,13 +63,14 @@ export default function ElementCreator() {
 
     // 创建新元素
     const newItem = {
-      ...templateItem,
+      objid: generateId(),
+      ...template,
       boxLeft,
       boxTop,
-      boxWidth: template.boxWidth,
-      boxHeight: template.boxHeight,
-      showType: template.showType,
-      showColor: template.showColor
+      boxCode,
+      equipId,
+      boxName,
+      locId
     };
 
     // 添加元素到画布
@@ -109,11 +105,8 @@ export default function ElementCreator() {
             <label className="block text-xs mb-1">Box Code</label>
             <input
               type="text"
-              value={templateItem.boxCode || ''}
-              onChange={(e) => setTemplateItem({
-                ...templateItem,
-                boxCode: e.target.value
-              })}
+              value={boxCode}
+              onChange={(e) => setBoxCode(e.target.value)}
               className="w-full px-2 py-1 border rounded text-sm"
               placeholder="盒子编码"
             />
@@ -123,11 +116,8 @@ export default function ElementCreator() {
             <label className="block text-xs mb-1">Equip ID</label>
             <input
               type="text"
-              value={templateItem.equipId || ''}
-              onChange={(e) => setTemplateItem({
-                ...templateItem,
-                equipId: e.target.value
-              })}
+              value={equipId}
+              onChange={(e) => setEquipId(e.target.value)}
               className="w-full px-2 py-1 border rounded text-sm"
               placeholder="设备ID"
             />
@@ -137,11 +127,8 @@ export default function ElementCreator() {
             <label className="block text-xs mb-1">Box Name</label>
             <input
               type="text"
-              value={templateItem.boxName || ''}
-              onChange={(e) => setTemplateItem({
-                ...templateItem,
-                boxName: e.target.value
-              })}
+              value={boxName}
+              onChange={(e) => setBoxName(e.target.value)}
               className="w-full px-2 py-1 border rounded text-sm"
               placeholder="盒子名称"
             />
@@ -151,11 +138,8 @@ export default function ElementCreator() {
             <label className="block text-xs mb-1">Loc ID</label>
             <input
               type="text"
-              value={templateItem.locId || ''}
-              onChange={(e) => setTemplateItem({
-                ...templateItem,
-                locId: e.target.value
-              })}
+              value={locId}
+              onChange={(e) => setLocId(e.target.value)}
               className="w-full px-2 py-1 border rounded text-sm"
               placeholder="位置ID"
             />
